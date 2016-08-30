@@ -1,6 +1,6 @@
 # VERSION 1.0.1
 
-FROM quay.io/keboola/custom-python
+FROM quay.io/keboola/docker-custom-python:1.1.3
 MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>
 
 # setup the environment
