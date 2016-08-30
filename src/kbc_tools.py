@@ -2,10 +2,9 @@
 # Python 3
 
 import csv
+import itertools
 import json
 import sys
-
-import itertools
 
 import requests
 

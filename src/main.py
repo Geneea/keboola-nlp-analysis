@@ -3,6 +3,7 @@
 
 import argparse
 import sys
+import traceback
 
 import analysis_app
 
@@ -21,6 +22,7 @@ def main():
         sys.exit(1)
     except Exception as e:
         print("{type}: {e}".format(type=type(e).__name__, e=e), file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         sys.exit(2)
 
 if __name__ == '__main__':

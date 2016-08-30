@@ -4,7 +4,7 @@
 import json
 import os
 
-import keboola
+from keboola import docker
 
 from kbc_tools import read_csv, csv_writer, slice_stream, make_batch_request
 
@@ -39,10 +39,12 @@ class Params:
         self.validate()
 
     def get_user_key(self):
-        if 'image_parameters' in self.config.config_data and 'user_key' in self.config.config_data['image_parameters']:
-            return self.config.config_data['image_parameters']['user_key']
+        if 'user_key' in self.config.get_parameters():
+            return self.config.get_parameters()['user_key']
+        if 'image_parameters' in self.config.config_data and '#user_key' in self.config.config_data['image_parameters']:
+            return self.config.config_data['image_parameters']['#user_key']
         else:
-            return self.config.get_parameters().get('user_key')
+            return None
 
     def get_table_paths(self):
         in_tabs = self.config.get_input_tables()
@@ -71,7 +73,7 @@ class Params:
 
     @staticmethod
     def init(data_dir=''):
-        return Params(keboola.docker.Config(data_dir))
+        return Params(docker.Config(data_dir))
 
 class AnalysisApp:
 
@@ -99,7 +101,7 @@ class AnalysisApp:
             doc_writer = csv_writer(out_tab_doc, fields=self.get_doc_tab_fields())
             ent_writer = csv_writer(out_tab_ent, fields=self.get_ent_tab_fields())
 
-            for doc_analysis in self.analyze(in_tab):
+            for doc_analysis in self.analyze(read_csv(in_tab)):
                 doc_writer.writerows(self.analysis_to_doc_result(doc_analysis))
                 ent_writer.writerows(self.analysis_to_ent_result(doc_analysis))
 
@@ -125,7 +127,7 @@ class AnalysisApp:
             'customerId': self.params.customer_id
         }
         if self.params.analysis_types:
-            req['analysisTypes'] = self.params.analysis_types
+            req['analysisTypes'] = list(self.params.analysis_types)
         if self.params.language:
             req['language'] = self.params.language
         if self.params.domain:

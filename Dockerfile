@@ -1,4 +1,4 @@
-# VERSION 1.0.0
+# VERSION 1.0.1
 
 FROM quay.io/keboola/custom-python
 MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>
