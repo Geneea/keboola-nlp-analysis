@@ -68,6 +68,9 @@ class Params:
             raise ValueError('the "columns.id" and "columns.text" are required parameters')
         if self.analysis_types and len(self.analysis_types - ANALYSIS_TYPES) > 0:
             raise ValueError('invalid "analysisTypes" parameter, allowed values are {types}'.format(types=ANALYSIS_TYPES))
+        for cols in (self.id_cols, self.text_cols, self.title_cols, self.lead_cols):
+            if not isinstance(cols, list):
+                raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
             if id_col in ('language', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
@@ -95,9 +98,10 @@ class AnalysisApp:
             all_cols = self.params.id_cols + self.params.text_cols + self.params.title_cols + self.params.lead_cols
             for col in all_cols:
                 if col not in row:
-                    raise ValueError('the source table does not contain column {col}'.format(col=col))
+                    raise ValueError('the source table does not contain column "{col}"'.format(col=col))
 
     def run(self):
+        print('starting NLP analysis with features {types}'.format(types=self.params.analysis_types))
         doc_count = 0
 
         out_tab_doc_path = self.params.get_output_path(OUT_TAB_DOC)

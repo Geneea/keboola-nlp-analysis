@@ -38,7 +38,7 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     size = sum(len(doc[key]) for doc in batch for key in doc)
     if size > MAX_REQ_SIZE:
         if len(batch) == 1:
-            print('document "{id}" is too large'.format(id=batch[0][doc_id_key]), file=sys.stderr)
+            print('document with ID={id} is too large'.format(id=batch[0][doc_id_key]), file=sys.stderr)
             return []
 
         half = len(batch) // 2
@@ -57,8 +57,8 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
 
     res = json_post(url, headers, req)
     if len(res) == 0:
-        ids = ','.join(doc[doc_id_key] for doc in batch)
-        print('failed to process documents [{ids}]'.format(ids=ids), file=sys.stdout)
+        ids = ' '.join(doc[doc_id_key] for doc in batch)
+        print('failed to process documents: {ids}'.format(ids=ids), file=sys.stdout)
 
     return res
 
