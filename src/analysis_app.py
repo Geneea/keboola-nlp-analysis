@@ -14,6 +14,9 @@ DOC_BATCH_SIZE = 12
 
 ANALYSIS_TYPES = frozenset(['sentiment', 'entities', 'tags'])
 
+OUT_TAB_DOC = 'analysis-result-documents.csv'
+OUT_TAB_ENT = 'analysis-result-entities.csv'
+
 class Params:
 
     def __init__(self, config):
@@ -22,14 +25,14 @@ class Params:
         self.customer_id = os.getenv('KBC_PROJECTID')
 
         self.user_key = self.get_user_key()
-        self.in_tab_path, self.out_tab_path = self.get_table_paths()
+        self.source_tab_path = self.get_source_tab_path()
         self.analysis_types = self.get_analysis_types()
 
         params = config.get_parameters()
-        self.id_col = params.get('columns', {}).get('id')
-        self.text_col = params.get('columns', {}).get('text')
-        self.title_col = params.get('columns', {}).get('title')
-        self.lead_col = params.get('columns', {}).get('lead')
+        self.id_cols = params.get('columns', {}).get('id', [])
+        self.text_cols = params.get('columns', {}).get('text', [])
+        self.title_cols = params.get('columns', {}).get('title', [])
+        self.lead_cols = params.get('columns', {}).get('lead', [])
         self.language = params.get('language')
         self.domain = params.get('domain')
         self.correction = params.get('correction')
@@ -46,12 +49,9 @@ class Params:
         else:
             return None
 
-    def get_table_paths(self):
+    def get_source_tab_path(self):
         in_tabs = self.config.get_input_tables()
-        in_tab = in_tabs[0]['full_path'] if len(in_tabs) == 1 else None
-        out_tabs = self.config.get_expected_output_tables()
-        out_tab = out_tabs[0]['full_path'] if len(out_tabs) == 1 else None
-        return in_tab, out_tab
+        return in_tabs[0]['full_path'] if len(in_tabs) == 1 else None
 
     def get_analysis_types(self):
         types = self.config.get_parameters().get('analysis_types', [])
@@ -62,14 +62,20 @@ class Params:
             raise ValueError('the "KBC_PROJECTID" environment variable needs to be set')
         if self.user_key is None:
             raise ValueError('the "user_key" parameter has to be provided')
-        if self.in_tab_path is None or self.out_tab_path is None:
-            raise ValueError('exactly one INPUT and one OUTPUT table mapping needs to be specified')
-        if self.id_col is None or self.text_col is None:
+        if self.source_tab_path is None:
+            raise ValueError('exactly one INPUT table mapping needs to be specified')
+        if not self.id_cols or not self.text_cols:
             raise ValueError('the "columns.id" and "columns.text" are required parameters')
         if self.analysis_types and len(self.analysis_types - ANALYSIS_TYPES) > 0:
             raise ValueError('invalid "analysisTypes" parameter, allowed values are {types}'.format(types=ANALYSIS_TYPES))
-        if self.id_col in ('language', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'usedChars'):
-            raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=self.id_col))
+        for id_col in self.id_cols:
+            if id_col in ('language', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'usedChars'):
+                raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
+
+    def get_output_path(self, filename):
+        return os.path.normpath(os.path.join(
+                self.config.get_data_dir(), 'out', 'tables', filename
+        ))
 
     @staticmethod
     def init(data_dir=''):
@@ -82,20 +88,21 @@ class AnalysisApp:
         self.validate_input()
 
     def validate_input(self):
-        with open(self.params.in_tab_path, 'r', encoding='utf-8') as in_tab:
+        with open(self.params.source_tab_path, 'r', encoding='utf-8') as in_tab:
             row = next(read_csv(in_tab))
             if row is None:
                 raise ValueError('could not read any data from the source table')
-            for col in [self.params.id_col, self.params.text_col, self.params.title_col, self.params.lead_col]:
-                if col is not None and col not in row:
+            all_cols = self.params.id_cols + self.params.text_cols + self.params.title_cols + self.params.lead_cols
+            for col in all_cols:
+                if col not in row:
                     raise ValueError('the source table does not contain column {col}'.format(col=col))
 
     def run(self):
         doc_count = 0
 
-        out_tab_doc_path = self.params.out_tab_path
-        out_tab_ent_path = self.params.out_tab_path[:-3] + 'entities.csv'
-        with open(self.params.in_tab_path, 'r', encoding='utf-8') as in_tab, \
+        out_tab_doc_path = self.params.get_output_path(OUT_TAB_DOC)
+        out_tab_ent_path = self.params.get_output_path(OUT_TAB_ENT)
+        with open(self.params.source_tab_path, 'r', encoding='utf-8') as in_tab, \
              open(out_tab_doc_path, 'w', encoding='utf-8') as out_tab_doc, \
              open(out_tab_ent_path, 'w', encoding='utf-8') as out_tab_ent:
             doc_writer = csv_writer(out_tab_doc, fields=self.get_doc_tab_fields())
@@ -142,51 +149,58 @@ class AnalysisApp:
 
     def row_to_doc(self, row):
         doc = {
-            'id': row[self.params.id_col],
-            'text': row[self.params.text_col]
+            'id': json.dumps(list(row[id_col] for id_col in self.params.id_cols)),
+            'text': ' .\n'.join(row[text_col] for text_col in self.params.text_cols)
         }
-        if self.params.title_col is not None:
-            doc['title'] = row[self.params.title_col]
-        if self.params.lead_col is not None:
-            doc['lead'] = row[self.params.lead_col]
+        if self.params.title_cols is not None:
+            doc['title'] = ' .\n'.join(row[title_col] for title_col in self.params.title_cols)
+        if self.params.lead_cols:
+            doc['lead'] = ' .\n'.join(row[lead_col] for lead_col in self.params.lead_cols)
         return doc
 
     def analysis_to_doc_result(self, doc_analysis):
+        doc_ids_vals = zip(self.params.id_cols, json.loads(doc_analysis['id']))
         doc_res = {
-            self.params.id_col: doc_analysis['id'],
             'language': doc_analysis['language'],
             'usedChars': str(doc_analysis['usedChars'])
         }
+        for id_col, val in doc_ids_vals:
+            doc_res[id_col] = val
         if 'sentiment' in doc_analysis:
             doc_res['sentimentPolarity'] = doc_analysis['sentiment']['polarity']
             doc_res['sentimentLabel'] = doc_analysis['sentiment']['label']
         yield doc_res
 
     def analysis_to_ent_result(self, doc_analysis):
+        doc_ids_vals = list(zip(self.params.id_cols, json.loads(doc_analysis['id'])))
         if 'entities' in doc_analysis:
             for ent in doc_analysis['entities']:
-                yield {
-                    self.params.id_col: doc_analysis['id'],
+                ent_res = {
                     'type': ent['type'],
                     'text': ent['text']
                 }
+                for id_col, val in doc_ids_vals:
+                    ent_res[id_col] = val
+                yield ent_res
 
     def get_doc_tab_fields(self):
-        fields = [self.params.id_col, 'language']
+        fields = self.params.id_cols + ['language']
         if not self.params.analysis_types or 'sentiment' in self.params.analysis_types:
             fields += ['sentimentPolarity', 'sentimentLabel']
         fields += ['usedChars']
         return fields
 
     def get_ent_tab_fields(self):
-        return [self.params.id_col, 'type', 'text']
+        return self.params.id_cols + ['type', 'text']
 
     def write_manifest(self, *, doc_tab_path, ent_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest:
             print(json.dumps({
-                'primary_key': [self.params.id_col]
+                'primary_key': self.params.id_cols,
+                'incremental': True
             }), file=manifest)
         with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest:
             print(json.dumps({
-                'primary_key': [self.params.id_col, 'type', 'text']
+                'primary_key': self.params.id_cols + ['type', 'text'],
+                'incremental': True
             }), file=manifest)
