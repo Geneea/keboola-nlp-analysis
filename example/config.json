@@ -1,0 +1,21 @@
+{
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "destination": "source.csv"
+        }
+      ]
+    }
+  },
+  "parameters": {
+    "user_key": "<ENTER API KEY HERE>",
+    "columns": {
+      "id": ["id"],
+      "text": ["text"]
+    },
+    "analysis_types": ["sentiment", "entities", "tags"],
+    "language": "en",
+    "use_beta": false
+  }
+}

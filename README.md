@@ -1,2 +1,74 @@
-# keboola-nlp-analysis
-Integration of the Geneea NLP platform into the Keboola Connection (KBC).
+# Geneea NLP platform integration with Keboola Connection
+
+Integration of the [Geneea API](https://api.geneea.com) with [Keboola Connection](https://connection.keboola.com).
+
+This is a Docker container used for running general-purpose NLP analysis jobs in the KBC.
+Automatically built Docker images are available at [Docker Hub Registry](https://hub.docker.com/r/geneea/keboola-nlp-analysis/).
+
+The supported NLP analysis types are: `sentiment`, `entities`, `tags`.
+
+## Building a container
+To build this container manually one can use:
+
+```
+git clone https://github.com/Geneea/keboola-nlp-analysis.git
+cd keboola-nlp-analysis
+sudo docker build --no-cache -t geneea/keboola-nlp-analysis .
+```
+
+## Running a container
+This container can be run from the Registry using:
+
+```
+sudo docker run \
+--volume=/home/ec2-user/data:/data \
+--rm \
+geneea/keboola-nlp-analysis:latest
+```
+Note: `--volume` needs to be adjusted accordingly.
+
+## Sample configuration
+Mapped to `/data/config.json`
+
+```
+{
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "destination": "source.csv"
+        }
+      ]
+    }
+  },
+  "parameters": {
+    "user_key": "<ENTER API KEY HERE>",
+    "columns": {
+      "id": ["date", "subject"],
+      "title": ["subject"],
+      "text": ["body_1", "body_2"]
+    },
+    "analysis_types": ["sentiment", "entities", "tags"],
+    "language": "cs",
+    "domain": "news",
+    "correction": "basic",
+    "diacritization": "auto",
+    "use_beta": false
+  }
+}
+```
+
+## Output format
+The results of the NLP analysis are writen into two tables.
+
+* `analysis-result-documents.csv` with document-level results, columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `language` detected language of the document, as ISO 639-1 language code
+    * `sentimentPolarity` detected sentiment of the document (_1_, _0_ or _-1_)
+    * `sentimentLabel` sentiment of the document as a label (_positive_, _neutral_ or _negative_)
+    * `usedChars` the number of used characters by this document
+
+* `analysis-result-entities.csv` with entities-level results (multiple results per one document), columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
+    * `text` disambiguated and standardized form of the entity (primary key)
