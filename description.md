@@ -6,7 +6,7 @@ Do you need to understand trends in a large stream of customer feedback? Detect 
 
 Feel free to try the system in our [live demo](https://demo.geneea.com) or you can browse the [result of an analysis of a large dataset](https://frida.geneea.com/index.html#/airlines?s=eyJxIjoiKjoqIiwiZiI6W119).
 
-![Screenshot - Geneea Demo](/img/demo-screenshot.png.png)
+![Screenshot - Geneea Demo](/img/demo-screenshot.png)
 
 ## Features
 
