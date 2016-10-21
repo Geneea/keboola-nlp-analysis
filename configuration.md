@@ -23,15 +23,16 @@ Type of analysis:
 
 The result contains two tables:
 
-* `analysis-result-documents.csv` with document-level results, columns:
+* `analysis-result-documents.csv` with document-level results in the following columns:
     * all `id` columns from the input table (used as primary keys)
     * `language` detected language of the document, as ISO 639-1 language code
     * `sentimentPolarity` detected sentiment of the document (_1_, _0_ or _-1_)
     * `sentimentLabel` sentiment of the document as a label (_positive_, _neutral_ or _negative_)
-    * `usedChars` the number of used characters by this document
+    * `usedChars` the number of characters used by this document
 
-* `analysis-result-entities.csv` with entity-level results (multiple rows per one document) has these columns:
-    * all `id` columns from the input table (used as primary keys)
-    * `type` type of the found entity, e.g., _person_, _organization_ or _tag_ (primary key)
-    * `text` disambiguated and standardized form of the entity e.g., _John Smith_, _Keboola_, _safe carseat_ (primary key)
+* `analysis-result-entities.csv` with entity-level results has the following columns:
+    * all `id` columns from the input table 
+    * `type` type of the found entity, e.g., _person_, _organization_ or _tag_ 
+    * `text` disambiguated and standardized form of the entity, e.g., _John Smith_, _Keboola_, _safe carseat_ 
 
+  There are multiple rows per one document. All columns are part of the primary key. Note that the table contains tags (unrestricted topics) as well.  
