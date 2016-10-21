@@ -35,4 +35,5 @@ The result contains two tables:
     * `type` type of the found entity, e.g., _person_, _organization_ or _tag_ 
     * `text` disambiguated and standardized form of the entity, e.g., _John Smith_, _Keboola_, _safe carseat_ 
 
-  There are multiple rows per one document. All columns are part of the primary key. Note that the table contains tags (unrestricted topics) as well.  
+  There are multiple rows per one document. All columns are part of the primary key. 
+  Note that the table contains tags (unrestricted topics) as well.  
