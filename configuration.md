@@ -23,17 +23,15 @@ Type of analysis:
 
 The result contains two tables:
 
-* The 'analysis-result-documents.csv' table; it contains the following fields for each document:
-   * id - document id
-   * language 
-   * usedChars
-   * sentimentPolarity
-   * sentimentLabel
+* `analysis-result-documents.csv` with document-level results, columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `language` detected language of the document, as ISO 639-1 language code
+    * `sentimentPolarity` detected sentiment of the document (_1_, _0_ or _-1_)
+    * `sentimentLabel` sentiment of the document as a label (_positive_, _neutral_ or _negative_)
+    * `usedChars` the number of used characters by this document
 
-* The 'analysis-result-entities.csv' table; it contains the following fields for each document:
-   * id - document id
-   * type - type of the entity (e.g. person, organization, tag) 
-   * text - text of the entity (e.g. John Smith, Keboola, safe carseat)
-
-
+* `analysis-result-entities.csv` with entity-level results (multiple rows per one document) has these columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `type` type of the found entity, e.g., _person_, _organization_ or _tag_ (primary key)
+    * `text` disambiguated and standardized form of the entity e.g., _John Smith_, _Keboola_, _safe carseat_ (primary key)
 
