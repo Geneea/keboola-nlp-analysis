@@ -3,6 +3,7 @@
 
 import json
 import os
+import sys
 
 from keboola import docker
 
@@ -102,6 +103,7 @@ class AnalysisApp:
 
     def run(self):
         print('starting NLP analysis with features {types}'.format(types=self.params.analysis_types))
+        sys.stdout.flush()
         doc_count = 0
 
         out_tab_doc_path = self.params.get_output_path(OUT_TAB_DOC)
@@ -119,10 +121,12 @@ class AnalysisApp:
                 doc_count += 1
                 if doc_count % 1000 == 0:
                     print('successfully analyzed {n} documents'.format(n=doc_count))
+                    sys.stdout.flush()
 
         self.write_manifest(doc_tab_path=out_tab_doc_path, ent_tab_path=out_tab_ent_path)
 
         print('the analysis has finished successfully, {n} documents were analyzed'.format(n=doc_count))
+        sys.stdout.flush()
 
     def analyze(self, row_stream):
         url = BASE_URL if not self.params.use_beta else BETA_URL

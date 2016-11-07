@@ -19,9 +19,11 @@ def main():
         sys.exit(0)
     except (ValueError, LookupError, IOError) as e:
         print('{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
+        sys.stderr.flush()
         sys.exit(1)
     except Exception as e:
         print('{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
+        sys.stderr.flush()
         traceback.print_exc(file=sys.stderr)
         sys.exit(2)
 

@@ -28,6 +28,7 @@ def read_csv(input_file):
             yield next(reader)
         except csv.Error as e:
             print('CSV read error: {e}'.format(e=e), file=sys.stderr)
+            sys.stderr.flush()
 
 def csv_writer(output_file, *, fields):
     writer = csv.DictWriter(output_file, fieldnames=fields, dialect='kbc')
@@ -39,6 +40,7 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     if size > MAX_REQ_SIZE:
         if len(batch) == 1:
             print('document with ID={id} is too large'.format(id=batch[0][doc_id_key]), file=sys.stderr)
+            sys.stderr.flush()
             return []
 
         half = len(batch) // 2
@@ -59,6 +61,7 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     if len(res) == 0:
         ids = ' '.join(doc[doc_id_key] for doc in batch)
         print('failed to process documents: {ids}'.format(ids=ids), file=sys.stdout)
+        sys.stderr.flush()
 
     return res
 
