@@ -81,6 +81,11 @@ class Params:
                 self.config.get_data_dir(), 'out', 'tables', filename
         ))
 
+    def get_usage_path(self):
+        return os.path.normpath(os.path.join(
+                self.config.get_data_dir(), 'out', 'usage.json'
+        ))
+
     @staticmethod
     def init(data_dir=''):
         return Params(docker.Config(data_dir))
@@ -105,6 +110,7 @@ class AnalysisApp:
         print('starting NLP analysis with features {types}'.format(types=self.params.analysis_types))
         sys.stdout.flush()
         doc_count = 0
+        used_chars = 0
 
         out_tab_doc_path = self.params.get_output_path(OUT_TAB_DOC)
         out_tab_ent_path = self.params.get_output_path(OUT_TAB_ENT)
@@ -119,13 +125,16 @@ class AnalysisApp:
                 ent_writer.writerows(self.analysis_to_ent_result(doc_analysis))
 
                 doc_count += 1
+                used_chars += int(doc_analysis['usedChars'])
                 if doc_count % 1000 == 0:
-                    print('successfully analyzed {n} documents'.format(n=doc_count))
+                    self.write_usage(doc_count=doc_count, used_chars=used_chars)
+                    print('successfully analyzed {n} documents with {ch} characters'.format(n=doc_count, ch=used_chars))
                     sys.stdout.flush()
 
+        self.write_usage(doc_count=doc_count, used_chars=used_chars)
         self.write_manifest(doc_tab_path=out_tab_doc_path, ent_tab_path=out_tab_ent_path)
 
-        print('the analysis has finished successfully, {n} documents were analyzed'.format(n=doc_count))
+        print('the analysis has finished successfully, {n} documents with {ch} characters were analyzed'.format(n=doc_count, ch=used_chars))
         sys.stdout.flush()
 
     def analyze(self, row_stream):
@@ -202,13 +211,21 @@ class AnalysisApp:
         return self.params.id_cols + ['type', 'text']
 
     def write_manifest(self, *, doc_tab_path, ent_tab_path):
-        with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest:
-            print(json.dumps({
+        with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            json.dump({
                 'primary_key': self.params.id_cols,
                 'incremental': True
-            }), file=manifest)
-        with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest:
-            print(json.dumps({
+            }, manifest_file, indent=4)
+        with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            json.dump({
                 'primary_key': self.params.id_cols + ['type', 'text'],
                 'incremental': True
-            }), file=manifest)
+            }, manifest_file, indent=4)
+
+    def write_usage(self, *, doc_count, used_chars):
+        usage_path = self.params.get_usage_path()
+        with open(usage_path, 'w', encoding='utf-8') as usage_file:
+            json.dump([
+                {'metric': 'documents', 'value': doc_count},
+                {'metric': 'characters', 'value': used_chars}
+            ], usage_file, indent=4)
