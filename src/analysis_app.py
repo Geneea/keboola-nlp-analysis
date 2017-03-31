@@ -158,8 +158,6 @@ class AnalysisApp:
             req['domain'] = self.params.domain
         if self.params.correction:
             req['correction'] = self.params.correction
-        if self.params.correction:
-            req['correction'] = self.params.correction
         if self.params.diacritization:
             req['diacritization'] = self.params.diacritization
         return req
@@ -167,12 +165,12 @@ class AnalysisApp:
     def row_to_doc(self, row):
         doc = {
             'id': json.dumps(list(row[id_col] for id_col in self.params.id_cols)),
-            'text': ' .\n'.join(row[text_col] for text_col in self.params.text_cols)
+            'text': '\n\n'.join(row[text_col] for text_col in self.params.text_cols)
         }
-        if self.params.title_cols is not None:
-            doc['title'] = ' .\n'.join(row[title_col] for title_col in self.params.title_cols)
+        if self.params.title_cols:
+            doc['title'] = '\n\n'.join(row[title_col] for title_col in self.params.title_cols)
         if self.params.lead_cols:
-            doc['lead'] = ' .\n'.join(row[lead_col] for lead_col in self.params.lead_cols)
+            doc['lead'] = '\n\n'.join(row[lead_col] for lead_col in self.params.lead_cols)
         return doc
 
     def analysis_to_doc_result(self, doc_analysis):
