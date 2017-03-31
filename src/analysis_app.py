@@ -1,17 +1,20 @@
 # coding=utf-8
 # Python 3
 
+import itertools
 import json
 import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
 
 from keboola import docker
 
-from kbc_tools import read_csv, csv_writer, slice_stream, make_batch_request
+from kbc_tools import read_csv, csv_writer, slice_stream, make_batch_request, parallel_map
 
 BASE_URL = 'https://api.geneea.com/keboola/v2/analysis'
 BETA_URL = 'https://beta-api.geneea.com/keboola/v2/analysis'
 DOC_BATCH_SIZE = 12
+THREAD_COUNT = 1
 
 ANALYSIS_TYPES = frozenset(['sentiment', 'entities', 'tags'])
 
@@ -39,6 +42,8 @@ class Params:
         self.correction = params.get('correction')
         self.diacritization = params.get('diacritization')
         self.use_beta = params.get('use_beta', False)
+        self.doc_batch_size = int(params.get('doc_batch_size', DOC_BATCH_SIZE))
+        self.thread_count = int(params.get('thread_count', THREAD_COUNT))
 
         self.validate()
 
@@ -75,6 +80,8 @@ class Params:
         for id_col in self.id_cols:
             if id_col in ('language', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
+        if self.thread_count > 8:
+            raise ValueError('the "thread_count" parameter can not be greater than 8')
 
     def get_output_path(self, filename):
         return os.path.normpath(os.path.join(
@@ -139,12 +146,16 @@ class AnalysisApp:
 
     def analyze(self, row_stream):
         url = BASE_URL if not self.params.use_beta else BETA_URL
+        user_key = self.params.user_key
         req = self.get_request()
 
-        for rows in slice_stream(row_stream, DOC_BATCH_SIZE):
-            batch = list(map(self.row_to_doc, rows))
-            for doc_analysis in make_batch_request(batch, req, url=url, user_key=self.params.user_key):
-                yield doc_analysis
+        batch_stream = self.doc_batch_stream(row_stream)
+        with ProcessPoolExecutor(max_workers=self.params.thread_count) as executor:
+            for batch_analysis in parallel_map(
+                executor, make_batch_request,
+                batch_stream, itertools.repeat(req), url=url, user_key=user_key
+            ):
+                yield from batch_analysis
 
     def get_request(self):
         req = {
@@ -161,6 +172,10 @@ class AnalysisApp:
         if self.params.diacritization:
             req['diacritization'] = self.params.diacritization
         return req
+
+    def doc_batch_stream(self, row_stream):
+        for rows in slice_stream(row_stream, self.params.doc_batch_size):
+            yield list(map(self.row_to_doc, rows))
 
     def row_to_doc(self, row):
         doc = {
@@ -225,5 +240,6 @@ class AnalysisApp:
         with open(usage_path, 'w', encoding='utf-8') as usage_file:
             json.dump([
                 {'metric': 'documents', 'value': doc_count},
-                {'metric': 'characters', 'value': used_chars}
+                {'metric': 'characters', 'value': used_chars},
+                {'metric': 'processing_threads', 'value': self.params.thread_count}
             ], usage_file, indent=4)

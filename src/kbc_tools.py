@@ -5,6 +5,7 @@ import csv
 import itertools
 import json
 import sys
+from collections import deque
 
 import requests
 
@@ -84,3 +85,21 @@ def json_post(url, headers, data):
         return []
 
     return response.json()
+
+def parallel_map(pool, fn, *iterables, **kwargs):
+    argStream = zip(*iterables)
+    buffer = deque([pool.submit(fn, *args, **kwargs) for args in list(itertools.islice(argStream, 2 * pool._max_workers))])
+    def result_iterator():
+        try:
+            while buffer:
+                future = buffer.popleft()
+                yield future.result()
+                try:
+                    args = next(argStream)
+                    buffer.append(pool.submit(fn, *args, **kwargs))
+                except StopIteration:
+                    pass
+        finally:
+            for future in buffer:
+                future.cancel()
+    return result_iterator()
