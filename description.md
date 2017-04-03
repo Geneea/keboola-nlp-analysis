@@ -6,17 +6,17 @@ Do you need to understand trends in a large stream of customer feedback? Detect 
 
 Feel free to try the system in our [live demo](https://demo.geneea.com) or browse the [result of an analysis of a large dataset](https://frida.geneea.com/index.html#/airlines?s=eyJxIjoiKjoqIiwiZiI6W119).
 
-## Models and customizations
-
-Please note that our standard models are optimized for three domains: news articles, hospitality customer care and transportation customer care. If used in other areas, the obtained results will not be as good as they could be. In order to ensure the best possible outcome for your domain, we will be happy to provide you with a customized model. We offer a basic customization for free. Contact us at info@geneea.com.
-
 ## Pricing
 
 You can evaluate our app by analyzing up to 10 MB of text. Please contact us if you need a higher trial limit. Click [here](https://www.geneea.com/pricing) to see our detailed pricing. The price is the same regardless of the number of features enabled (detecting sentiment only costs the same as detecting sentiment and extracting entities). You can use the app to analyze 1MB of text per month for free.
 
-<img src="/img/demo-screenshot.png" alt="Screenshot - Geneea Demo" style="width: 200px;"/>
+## Models and customizations
+
+Please note that our standard models are optimized for three domains: news articles, hospitality customer care and transportation customer care. If used in other areas, the obtained results will not be as good as they could be. In order to ensure the best possible outcome for your domain, we will be happy to provide you with a customized model. We offer a basic customization for free. Contact us at info@geneea.com.
 
 ## Features
+
+<img src="/img/demo-screenshot.png" alt="Screenshot - Geneea Demo" style="width: 200px;"/>
 
 ### Identify Language
 
