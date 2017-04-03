@@ -42,8 +42,10 @@ class Params:
         self.correction = params.get('correction')
         self.diacritization = params.get('diacritization')
         self.use_beta = params.get('use_beta', False)
-        self.doc_batch_size = int(params.get('doc_batch_size', DOC_BATCH_SIZE))
-        self.thread_count = int(params.get('thread_count', THREAD_COUNT))
+
+        advanced_params = self.get_advanced_params()
+        self.doc_batch_size = int(advanced_params.get('doc_batch_size', DOC_BATCH_SIZE))
+        self.thread_count = int(advanced_params.get('thread_count', THREAD_COUNT))
 
         self.validate()
 
@@ -62,6 +64,10 @@ class Params:
     def get_analysis_types(self):
         types = self.config.get_parameters().get('analysis_types', [])
         return set(t.strip().lower() for t in types if isinstance(t, str))
+
+    def get_advanced_params(self):
+        advanced_params = self.config.get_parameters().get('advanced', {})
+        return advanced_params if isinstance(advanced_params, dict) else {}
 
     def validate(self):
         if self.customer_id is None:
