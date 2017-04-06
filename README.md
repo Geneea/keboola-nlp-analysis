@@ -65,11 +65,13 @@ The results of the NLP analysis are written into two tables.
 * `analysis-result-documents.csv` with document-level results, columns:
     * all `id` columns from the input table (used as primary keys)
     * `language` detected language of the document, as ISO 639-1 language code
-    * `sentimentPolarity` detected sentiment of the document (_1_, _0_ or _-1_)
-    * `sentimentLabel` sentiment of the document as a label (_positive_, _neutral_ or _negative_)
+    * `sentimentValue` detected sentiment of the document, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the document (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
     * `usedChars` the number of used characters by this document
 
 * `analysis-result-entities.csv` with entities-level results (multiple results per one document), columns:
     * all `id` columns from the input table (used as primary keys)
     * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
     * `text` disambiguated and standardized form of the entity (primary key)
+    * `score` relevance score of the entity
