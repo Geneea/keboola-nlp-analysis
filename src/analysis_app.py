@@ -46,6 +46,7 @@ class Params:
         advanced_params = self.get_advanced_params()
         self.doc_batch_size = int(advanced_params.get('doc_batch_size', DOC_BATCH_SIZE))
         self.thread_count = int(advanced_params.get('thread_count', THREAD_COUNT))
+        self.reference_date = advanced_params.get('reference_date')
 
         self.validate()
 
@@ -84,10 +85,10 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'usedChars'):
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
-        if self.thread_count > 8:
-            raise ValueError('the "thread_count" parameter can not be greater than 8')
+        if self.thread_count > 32:
+            raise ValueError('the "thread_count" parameter can not be greater than 32')
 
     def get_output_path(self, filename):
         return os.path.normpath(os.path.join(
@@ -177,6 +178,8 @@ class AnalysisApp:
             req['correction'] = self.params.correction
         if self.params.diacritization:
             req['diacritization'] = self.params.diacritization
+        if self.params.reference_date:
+            req['referenceDate'] = self.params.reference_date
         return req
 
     def doc_batch_stream(self, row_stream):
@@ -198,11 +201,12 @@ class AnalysisApp:
         doc_ids_vals = zip(self.params.id_cols, json.loads(doc_analysis['id']))
         doc_res = {
             'language': doc_analysis['language'],
-            'usedChars': str(doc_analysis['usedChars'])
+            'usedChars': doc_analysis['usedChars']
         }
         for id_col, val in doc_ids_vals:
             doc_res[id_col] = val
         if 'sentiment' in doc_analysis:
+            doc_res['sentimentValue'] = doc_analysis['sentiment']['value']
             doc_res['sentimentPolarity'] = doc_analysis['sentiment']['polarity']
             doc_res['sentimentLabel'] = doc_analysis['sentiment']['label']
         yield doc_res
@@ -213,7 +217,8 @@ class AnalysisApp:
             for ent in doc_analysis['entities']:
                 ent_res = {
                     'type': ent['type'],
-                    'text': ent['text']
+                    'text': ent['text'],
+                    'score': ent['score']
                 }
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
@@ -222,12 +227,12 @@ class AnalysisApp:
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
         if not self.params.analysis_types or 'sentiment' in self.params.analysis_types:
-            fields += ['sentimentPolarity', 'sentimentLabel']
+            fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         fields += ['usedChars']
         return fields
 
     def get_ent_tab_fields(self):
-        return self.params.id_cols + ['type', 'text']
+        return self.params.id_cols + ['type', 'text', 'score']
 
     def write_manifest(self, *, doc_tab_path, ent_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
