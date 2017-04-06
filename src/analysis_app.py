@@ -148,6 +148,10 @@ class AnalysisApp:
         self.write_usage(doc_count=doc_count, used_chars=used_chars)
         self.write_manifest(doc_tab_path=out_tab_doc_path, ent_tab_path=out_tab_ent_path)
 
+        if self.params.analysis_types and not {'entities', 'tags'} & self.params.analysis_types:
+            os.unlink(out_tab_ent_path)
+            os.unlink(out_tab_ent_path + '.manifest')
+
         print('the analysis has finished successfully, {n} documents with {ch} characters were analyzed'.format(n=doc_count, ch=used_chars))
         sys.stdout.flush()
 

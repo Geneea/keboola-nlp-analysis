@@ -5,7 +5,7 @@ import argparse
 import sys
 import traceback
 
-import analysis_app
+from analysis_app import AnalysisApp
 
 def main():
     try:
@@ -13,7 +13,7 @@ def main():
         parser.add_argument('-d', '--data', dest='data_dir', required=True)
         args = parser.parse_args()
 
-        app = analysis_app.AnalysisApp(data_dir=args.data_dir)
+        app = AnalysisApp(data_dir=args.data_dir)
         app.run()
 
         sys.exit(0)
