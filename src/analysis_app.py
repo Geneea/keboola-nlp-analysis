@@ -112,9 +112,12 @@ class AnalysisApp:
 
     def validate_input(self):
         with open(self.params.source_tab_path, 'r', encoding='utf-8') as in_tab:
-            row = next(read_csv(in_tab))
-            if row is None:
-                raise ValueError('could not read any data from the source table')
+            try:
+                row = next(read_csv(in_tab))
+            except StopIteration:
+                print('WARN: could not read any data from the source table')
+                sys.stdout.flush()
+                return
             all_cols = self.params.id_cols + self.params.text_cols + self.params.title_cols + self.params.lead_cols
             for col in all_cols:
                 if col not in row:
