@@ -194,14 +194,17 @@ class AnalysisApp:
             yield list(map(self.row_to_doc, rows))
 
     def row_to_doc(self, row):
+        def join_cols(columns):
+            return '\n\n'.join(row[col] for col in columns if row[col])
+
         doc = {
             'id': json.dumps(list(row[id_col] for id_col in self.params.id_cols)),
-            'text': '\n\n'.join(row[text_col] for text_col in self.params.text_cols)
+            'text': join_cols(self.params.text_cols)
         }
         if self.params.title_cols:
-            doc['title'] = '\n\n'.join(row[title_col] for title_col in self.params.title_cols)
+            doc['title'] = join_cols(self.params.title_cols)
         if self.params.lead_cols:
-            doc['lead'] = '\n\n'.join(row[lead_col] for lead_col in self.params.lead_cols)
+            doc['lead'] = join_cols(self.params.lead_cols)
         return doc
 
     def analysis_to_doc_result(self, doc_analysis):

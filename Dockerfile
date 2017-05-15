@@ -1,4 +1,4 @@
-# VERSION 2.2.1
+# VERSION 2.2.2
 
 FROM quay.io/keboola/base-python:3.5.1-g
 MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>

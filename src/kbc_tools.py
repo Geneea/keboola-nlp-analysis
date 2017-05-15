@@ -13,6 +13,8 @@ MAX_REQ_SIZE = 100 * 1024
 CONNECT_TIMEOUT = 10.01
 READ_TIMEOUT = 128
 
+csv.field_size_limit(1024 * MAX_REQ_SIZE)
+
 def slice_stream(iterator, size):
     while True:
         chunk = tuple(itertools.islice(iterator, size))
@@ -28,7 +30,11 @@ def read_csv(input_file):
         try:
             yield next(reader)
         except csv.Error as e:
-            print('CSV read error: {e}'.format(e=e), file=sys.stderr)
+            print(
+                'could not properly read some row(s) for the input data',
+                'CSV read error, {type}: {e}'.format(type=type(e).__name__, e=e),
+                sep='\n', file=sys.stderr
+            )
             sys.stderr.flush()
 
 def csv_writer(output_file, *, fields):
@@ -40,7 +46,11 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     size = sum(len(doc[key]) for doc in batch for key in doc)
     if size > MAX_REQ_SIZE:
         if len(batch) == 1:
-            print('document with ID={id} is too large'.format(id=batch[0][doc_id_key]), file=sys.stderr)
+            print(
+                'skipping too large document with ID={id}'.format(id=batch[0][doc_id_key]),
+                'the maximum allowed size is {max} bytes'.format(max=MAX_REQ_SIZE),
+                sep='\n', file=sys.stderr
+            )
             sys.stderr.flush()
             return []
 
@@ -62,6 +72,7 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     if len(res) == 0:
         ids = ' '.join(doc[doc_id_key] for doc in batch)
         print('failed to process documents: {ids}'.format(ids=ids), file=sys.stdout)
+        print('if the problems persist, please contact our support at support@geneea.com', file=sys.stderr)
         sys.stderr.flush()
 
     return res
@@ -69,19 +80,30 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
 def json_post(url, headers, data):
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data), timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
-        if response.status_code >= 400:
+        code = response.status_code
+        if code >= 400:
             try:
                 err = response.json()
-                print('HTTP error {code}, {e}: {msg}'.format(
-                    code=response.status_code, e=err['exception'], msg=err['message']
-                ), file=sys.stderr)
+                print(
+                    'Error while communicating with the analysis API.',
+                    'HTTP error {code}, {e}: {msg}'.format(code=code, e=err['exception'], msg=err['message']),
+                    sep='\n', file=sys.stderr
+                )
             except ValueError:
-                err = response.text
-                print('HTTP error {code}\n{e}'.format(code=response.status_code, e=err), file=sys.stderr)
+                print(
+                    'Error while communicating with the analysis API.',
+                    'HTTP error {code}'.format(code=code),
+                    '{body}'.format(body=response.text),
+                    sep='\n', file=sys.stderr
+                )
 
             return []
     except requests.RequestException as e:
-        print('HTTP request exception\n{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
+        print(
+            'Error while communicating with the analysis API.',
+            'HTTP request exception, {type}: {e}'.format(type=type(e).__name__, e=e),
+            sep='\n', file=sys.stderr
+        )
         return []
 
     return response.json()

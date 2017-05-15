@@ -22,9 +22,10 @@ def main():
         sys.stderr.flush()
         sys.exit(1)
     except Exception as e:
-        print('{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
-        sys.stderr.flush()
         traceback.print_exc(file=sys.stderr)
+        print('{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
+        print('please contact our support at support@geneea.com', file=sys.stderr)
+        sys.stderr.flush()
         sys.exit(2)
 
 if __name__ == '__main__':
