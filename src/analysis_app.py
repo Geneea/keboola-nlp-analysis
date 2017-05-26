@@ -5,7 +5,10 @@ import itertools
 import json
 import os
 import sys
-from concurrent.futures import ProcessPoolExecutor
+
+import requests
+
+from concurrent.futures import ThreadPoolExecutor
 
 from keboola import docker
 
@@ -164,12 +167,15 @@ class AnalysisApp:
         req = self.get_request()
 
         batch_stream = self.doc_batch_stream(row_stream)
-        with ProcessPoolExecutor(max_workers=self.params.thread_count) as executor:
-            for batch_analysis in parallel_map(
-                executor, make_batch_request,
-                batch_stream, itertools.repeat(req), url=url, user_key=user_key
-            ):
-                yield from batch_analysis
+
+        with requests.Session() as session:
+            with ThreadPoolExecutor(max_workers=self.params.thread_count) as executor:
+                for batch_analysis in parallel_map(
+                    executor, make_batch_request,
+                    batch_stream, itertools.repeat(req), url=url, user_key=user_key,
+                    session=session
+                ):
+                    yield from batch_analysis
 
     def get_request(self):
         req = {
