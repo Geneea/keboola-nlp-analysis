@@ -15,6 +15,7 @@ READ_TIMEOUT = 128
 
 csv.field_size_limit(1024 * MAX_REQ_SIZE)
 
+
 def slice_stream(iterator, size):
     while True:
         chunk = tuple(itertools.islice(iterator, size))
@@ -22,6 +23,7 @@ def slice_stream(iterator, size):
             return
         else:
             yield chunk
+
 
 def read_csv(input_file):
     safe_input = (line.replace('\0', '') for line in input_file)
@@ -37,12 +39,14 @@ def read_csv(input_file):
             )
             sys.stderr.flush()
 
+
 def csv_writer(output_file, *, fields):
     writer = csv.DictWriter(output_file, fieldnames=fields, dialect='kbc')
     writer.writeheader()
     return writer
 
-def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_key='documents'):
+
+def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_key='documents', session=None):
     size = sum(len(doc[key]) for doc in batch for key in doc)
     if size > MAX_REQ_SIZE:
         if len(batch) == 1:
@@ -56,8 +60,10 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
 
         half = len(batch) // 2
         return itertools.chain(
-            make_batch_request(batch[:half], req_obj, url=url, user_key=user_key, doc_id_key=doc_id_key, docs_key=docs_key),
-            make_batch_request(batch[half:], req_obj, url=url, user_key=user_key, doc_id_key=doc_id_key, docs_key=docs_key)
+            make_batch_request(batch[:half], req_obj, url=url,
+                user_key=user_key, doc_id_key=doc_id_key, docs_key=docs_key, session=session),
+            make_batch_request(batch[half:], req_obj, url=url,
+                user_key=user_key, doc_id_key=doc_id_key, docs_key=docs_key, session=session)
         )
 
     headers = {
@@ -68,7 +74,7 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
     req.update(req_obj)
     req[docs_key] = list(batch)
 
-    res = json_post(url, headers, req)
+    res = json_post(url, headers, req, session=session)
     if len(res) == 0:
         ids = ' '.join(doc[doc_id_key] for doc in batch)
         print('failed to process documents: {ids}'.format(ids=ids), file=sys.stdout)
@@ -77,9 +83,11 @@ def make_batch_request(batch, req_obj, *, url, user_key, doc_id_key='id', docs_k
 
     return res
 
-def json_post(url, headers, data):
+
+def json_post(url, headers, data, session=None):
+    post = session.post if session else requests.post
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
+        response = post(url, headers=headers, data=json.dumps(data), timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
         code = response.status_code
         if code >= 400:
             try:
@@ -107,6 +115,7 @@ def json_post(url, headers, data):
         return []
 
     return response.json()
+
 
 def parallel_map(pool, fn, *iterables, **kwargs):
     argStream = zip(*iterables)
