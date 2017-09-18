@@ -34,6 +34,14 @@ Search your texts for names of people, locations, products, dates, account numbe
 We can adjust the detectors to your needs (e.g. taking into account your products) or even
 identify a new type of entity whether it should be financial products or offending expressions.
 
+### Relation Analysis
+
+Extract basic attributes of events and properties of things. Examples:
+
+  * _I can fully recommend their delicious scrambled eggs._ &rarr; `recommend(SUBJECT:I, OBJECT:scrambled eggs)`
+  * _My pizza was completely burned._ &rarr; `burn(OBJECT:pizza)`
+  * _They brought me a completely burnt pizza._ &rarr; `burnt(OBJECT:pizza)`
+
 ### Detect Sentiment
 
 Detect the emotions contained in the text. Was the author happy (_I loved it._),

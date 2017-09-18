@@ -60,7 +60,7 @@ Mapped to `/data/config.json`
 
 ## Output format
 
-The results of the NLP analysis are written into two tables.
+The results of the NLP analysis are written into three tables.
 
 * `analysis-result-documents.csv` with document-level results, columns:
     * all `id` columns from the input table (used as primary keys)
