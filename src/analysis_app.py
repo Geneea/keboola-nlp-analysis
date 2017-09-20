@@ -89,7 +89,8 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score',
+                          'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
