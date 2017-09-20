@@ -5,7 +5,7 @@ Integration of the [Geneea API](https://api.geneea.com) with [Keboola Connection
 This is a Docker container used for running general-purpose NLP analysis jobs in the KBC.
 Automatically built Docker images are available at [Docker Hub Registry](https://hub.docker.com/r/geneea/keboola-nlp-analysis/).
 
-The supported NLP analysis types are: `sentiment`, `entities`, `tags`.
+The supported NLP analysis types are: `sentiment`, `entities`, `tags`, `relations`.
 
 ## Building a container
 To build this container manually one can use:
@@ -48,7 +48,7 @@ Mapped to `/data/config.json`
       "title": ["subject"],
       "text": ["body_1", "body_2"]
     },
-    "analysis_types": ["sentiment", "entities", "tags"],
+    "analysis_types": ["sentiment", "entities", "tags", "relations"],
     "language": "cs",
     "domain": "news",
     "correction": "basic",
@@ -60,7 +60,7 @@ Mapped to `/data/config.json`
 
 ## Output format
 
-The results of the NLP analysis are written into two tables.
+The results of the NLP analysis are written into three tables.
 
 * `analysis-result-documents.csv` with document-level results, columns:
     * all `id` columns from the input table (used as primary keys)
@@ -75,3 +75,12 @@ The results of the NLP analysis are written into two tables.
     * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
     * `text` disambiguated and standardized form of the entity (primary key)
     * `score` relevance score of the entity
+
+* `analysis-result-relations.csv` with relations-level results (multiple results per one document), columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `type` type of the found relation, _VERB_ or _ATTR_, (primary key)
+    * `name` textual name of the relation, e.g. _buy_ or _smart_, (primary key)
+    * `subject` possible subject of the relation (primary key)
+    * `object` possible object of the relation (primary key)
+    * `subjectType` type of the relation's subject
+    * `objectType` type of the relation's object

@@ -19,10 +19,11 @@ BETA_URL = 'https://beta-api.geneea.com/keboola/v2/analysis'
 DOC_BATCH_SIZE = 12
 THREAD_COUNT = 1
 
-ANALYSIS_TYPES = frozenset(['sentiment', 'entities', 'tags'])
+ANALYSIS_TYPES = frozenset(['sentiment', 'entities', 'tags', 'relations'])
 
 OUT_TAB_DOC = 'analysis-result-documents.csv'
 OUT_TAB_ENT = 'analysis-result-entities.csv'
+OUT_TAB_REL = 'analysis-result-relations.csv'
 
 class Params:
 
@@ -88,7 +89,8 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score', 'usedChars'):
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score',
+                          'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
@@ -134,15 +136,19 @@ class AnalysisApp:
 
         out_tab_doc_path = self.params.get_output_path(OUT_TAB_DOC)
         out_tab_ent_path = self.params.get_output_path(OUT_TAB_ENT)
+        out_tab_rel_path = self.params.get_output_path(OUT_TAB_REL)
         with open(self.params.source_tab_path, 'r', encoding='utf-8') as in_tab, \
              open(out_tab_doc_path, 'w', encoding='utf-8') as out_tab_doc, \
-             open(out_tab_ent_path, 'w', encoding='utf-8') as out_tab_ent:
+             open(out_tab_ent_path, 'w', encoding='utf-8') as out_tab_ent, \
+             open(out_tab_rel_path, 'w', encoding='utf-8') as out_tab_rel:
             doc_writer = csv_writer(out_tab_doc, fields=self.get_doc_tab_fields())
             ent_writer = csv_writer(out_tab_ent, fields=self.get_ent_tab_fields())
+            rel_writer = csv_writer(out_tab_rel, fields=self.get_rel_tab_fields())
 
             for doc_analysis in self.analyze(read_csv(in_tab)):
                 doc_writer.writerows(self.analysis_to_doc_result(doc_analysis))
                 ent_writer.writerows(self.analysis_to_ent_result(doc_analysis))
+                rel_writer.writerows(self.analysis_to_rel_result(doc_analysis))
 
                 doc_count += 1
                 used_chars += int(doc_analysis['usedChars'])
@@ -152,11 +158,14 @@ class AnalysisApp:
                     sys.stdout.flush()
 
         self.write_usage(doc_count=doc_count, used_chars=used_chars)
-        self.write_manifest(doc_tab_path=out_tab_doc_path, ent_tab_path=out_tab_ent_path)
+        self.write_manifest(doc_tab_path=out_tab_doc_path, ent_tab_path=out_tab_ent_path, rel_tab_path=out_tab_rel_path)
 
         if self.params.analysis_types and not {'entities', 'tags'} & self.params.analysis_types:
             os.unlink(out_tab_ent_path)
             os.unlink(out_tab_ent_path + '.manifest')
+        if self.params.analysis_types and not 'relations' in self.params.analysis_types:
+            os.unlink(out_tab_rel_path)
+            os.unlink(out_tab_rel_path + '.manifest')
 
         print('the analysis has finished successfully, {n} documents with {ch} characters were analyzed'.format(n=doc_count, ch=used_chars))
         sys.stdout.flush()
@@ -228,8 +237,8 @@ class AnalysisApp:
         yield doc_res
 
     def analysis_to_ent_result(self, doc_analysis):
-        doc_ids_vals = list(zip(self.params.id_cols, json.loads(doc_analysis['id'])))
         if 'entities' in doc_analysis:
+            doc_ids_vals = list(zip(self.params.id_cols, json.loads(doc_analysis['id'])))
             for ent in doc_analysis['entities']:
                 ent_res = {
                     'type': ent['type'],
@@ -239,6 +248,23 @@ class AnalysisApp:
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
                 yield ent_res
+
+    def analysis_to_rel_result(self, doc_analysis):
+        if 'relations' in doc_analysis:
+            doc_ids_vals = list(zip(self.params.id_cols, json.loads(doc_analysis['id'])))
+            for rel in doc_analysis['relations']:
+                rel_res = {
+                    'type': rel['type'],
+                    'name': rel['name'],
+                    'negated': rel['negated'],
+                    'subject': rel.get('subjectName'),
+                    'subjectType': rel.get('subjectType'),
+                    'object': rel.get('objectName'),
+                    'objectType': rel.get('objectType')
+                }
+                for id_col, val in doc_ids_vals:
+                    rel_res[id_col] = val
+                yield rel_res
 
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
@@ -250,7 +276,10 @@ class AnalysisApp:
     def get_ent_tab_fields(self):
         return self.params.id_cols + ['type', 'text', 'score']
 
-    def write_manifest(self, *, doc_tab_path, ent_tab_path):
+    def get_rel_tab_fields(self):
+        return self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType']
+
+    def write_manifest(self, *, doc_tab_path, ent_tab_path, rel_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             json.dump({
                 'primary_key': self.params.id_cols,
@@ -259,6 +288,11 @@ class AnalysisApp:
         with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             json.dump({
                 'primary_key': self.params.id_cols + ['type', 'text'],
+                'incremental': True
+            }, manifest_file, indent=4)
+        with open(rel_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            json.dump({
+                'primary_key': self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object'],
                 'incremental': True
             }, manifest_file, indent=4)
 

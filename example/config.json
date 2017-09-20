@@ -14,7 +14,7 @@
       "id": ["id"],
       "text": ["text"]
     },
-    "analysis_types": ["sentiment", "entities", "tags"],
+    "analysis_types": ["sentiment", "entities", "tags", "relations"],
     "language": "en",
     "use_beta": false
   }
