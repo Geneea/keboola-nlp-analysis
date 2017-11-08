@@ -1,4 +1,4 @@
-# VERSION 2.3.0
+# VERSION 2.4.0
 
 FROM quay.io/keboola/base-python:3.5.1-g
 MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>
@@ -7,7 +7,7 @@ MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>
 WORKDIR /tmp
 RUN pip install --no-cache-dir --ignore-installed --cert=/tmp/cacert.pem \
                 requests \
-    && pip install --upgrade --no-cache-dir --ignore-installed --cert=/tmp/cacert.pem \
+    pip install --upgrade --no-cache-dir --ignore-installed --cert=/tmp/cacert.pem \
                 git+git://github.com/keboola/python-docker-application.git@1.2.0
 
 # prepare the container
