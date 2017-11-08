@@ -262,6 +262,14 @@ class AnalysisApp:
                     'object': rel.get('objectName'),
                     'objectType': rel.get('objectType')
                 }
+                if 'sentiment' in rel:
+                    rel_res['sentimentValue'] = rel['sentiment']['value']
+                    rel_res['sentimentPolarity'] = rel['sentiment']['polarity']
+                    rel_res['sentimentLabel'] = rel['sentiment']['label']
+                else:
+                    rel_res['sentimentValue'] = None
+                    rel_res['sentimentPolarity'] = None
+                    rel_res['sentimentLabel'] = None
                 for id_col, val in doc_ids_vals:
                     rel_res[id_col] = val
                 yield rel_res
@@ -277,7 +285,10 @@ class AnalysisApp:
         return self.params.id_cols + ['type', 'text', 'score']
 
     def get_rel_tab_fields(self):
-        return self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType']
+        fields = self.params.id_cols + ['type', 'name', 'negated']
+        fields += ['subject', 'object', 'subjectType', 'objectType']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        return fields
 
     def write_manifest(self, *, doc_tab_path, ent_tab_path, rel_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
