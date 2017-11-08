@@ -1,0 +1,10 @@
+{
+  "description": "table with sentence-level results",
+  "columns_description": {
+    "index": "zero-based index of the sentence in the document, (primary key)",
+    "text": "the sentence text",
+    "sentimentValue": "detected sentiment of the sentence, from an interval _\\[-1.0; 1.0\\]_",
+    "sentimentPolarity": "detected sentiment of the sentence (_-1_, _0_ or _1_)",
+    "sentimentLabel": "sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)"
+  }
+}

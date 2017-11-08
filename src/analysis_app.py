@@ -26,6 +26,9 @@ OUT_TAB_SNT = 'analysis-result-sentences.csv'
 OUT_TAB_ENT = 'analysis-result-entities.csv'
 OUT_TAB_REL = 'analysis-result-relations.csv'
 
+META_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'meta')
+META_DESC_KEY = 'KBC.description'
+
 class Params:
 
     def __init__(self, config):
@@ -324,25 +327,57 @@ class AnalysisApp:
 
     def write_manifest(self, *, doc_tab_path, snt_tab_path, ent_tab_path, rel_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            tab_desc, cols_desc = self.get_table_desc_meta('documents-tab.json')
             json.dump({
                 'primary_key': self.params.id_cols,
-                'incremental': True
+                'incremental': True,
+                'metadata': [tab_desc],
+                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(snt_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            tab_desc, cols_desc = self.get_table_desc_meta('sentences-tab.json')
             json.dump({
                 'primary_key': self.params.id_cols + ['index'],
-                'incremental': True
+                'incremental': True,
+                'metadata': [tab_desc],
+                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            tab_desc, cols_desc = self.get_table_desc_meta('entities-tab.json')
             json.dump({
                 'primary_key': self.params.id_cols + ['type', 'text'],
-                'incremental': True
+                'incremental': True,
+                'metadata': [tab_desc],
+                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(rel_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            tab_desc, cols_desc = self.get_table_desc_meta('relations-tab.json')
             json.dump({
                 'primary_key': self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object'],
-                'incremental': True
+                'incremental': True,
+                'metadata': [tab_desc],
+                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
             }, manifest_file, indent=4)
+
+    def get_table_desc_meta(self, meta_filename):
+        with open(os.path.join(META_DIR, meta_filename), 'r', encoding='utf-8') as meta_file:
+            table_meta = json.load(meta_file)
+        tab_desc = {
+            'key': META_DESC_KEY,
+            'value': table_meta.get('description', '')
+        }
+        cols_desc = dict()
+        for id_col in self.params.id_cols:
+            cols_desc[id_col] = {
+                'key': META_DESC_KEY,
+                'value': 'ID column "{col}", (primary key)'.format(col=id_col)
+            }
+        for col_name, col_desc in table_meta.get('columns_description', {}).items():
+            cols_desc[col_name] = {
+                'key': META_DESC_KEY,
+                'value': col_desc
+            }
+        return tab_desc, cols_desc
 
     def write_usage(self, *, doc_count, used_chars):
         usage_path = self.params.get_usage_path()
