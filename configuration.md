@@ -24,7 +24,7 @@ Type of analysis:
 * `relations` - extract basic attributes of events and properties of things, like `recommend(SUBJECT:I, OBJECT:scrambled eggs)` or `burnt(OBJECT:pizza)`.
 
 
-The result contains three tables:
+The result contains four tables:
 
 * `analysis-result-documents.csv` with document-level results in the following columns:
     * all `id` columns from the input table (used as primary keys)
@@ -33,6 +33,16 @@ The result contains three tables:
     * `sentimentPolarity` detected sentiment of the document (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
     * `usedChars` the number of characters used by this document
+
+* `analysis-result-sentences.csv` with sentence-level results has the following columns:
+    * all `id` columns from the input table
+    * `index` zero-based index of the sentence in the document
+    * `text` the sentence text
+    * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)
+
+  There are multiple rows per one document. All `id` columns plus the `index` column are part of the primary key.
 
 * `analysis-result-entities.csv` with entity-level results has the following columns:
     * all `id` columns from the input table
