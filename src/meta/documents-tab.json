@@ -1,0 +1,10 @@
+{
+  "description": "table with document-level results",
+  "columns_description": {
+    "language": "detected language of the document, as ISO 639-1 language code",
+    "sentimentValue": "detected sentiment of the document, from an interval _\\[-1.0; 1.0\\]_",
+    "sentimentPolarity": "detected sentiment of the document (_-1_, _0_ or _1_)",
+    "sentimentLabel": "sentiment of the document as a label (_negative_, _neutral_ or _positive_)",
+    "usedChars": "the number of characters used by this document"
+  }
+}

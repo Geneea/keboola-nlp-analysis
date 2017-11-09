@@ -24,7 +24,7 @@ Type of analysis:
 * `relations` - extract basic attributes of events and properties of things, like `recommend(SUBJECT:I, OBJECT:scrambled eggs)` or `burnt(OBJECT:pizza)`.
 
 
-The result contains three tables:
+The result contains four tables:
 
 * `analysis-result-documents.csv` with document-level results in the following columns:
     * all `id` columns from the input table (used as primary keys)
@@ -34,10 +34,20 @@ The result contains three tables:
     * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
     * `usedChars` the number of characters used by this document
 
+* `analysis-result-sentences.csv` with sentence-level results has the following columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `index` zero-based index of the sentence in the document, (primary key)
+    * `text` the sentence text
+    * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)
+
+  There are multiple rows per one document. All `id` columns plus the `index` column are part of the primary key.
+
 * `analysis-result-entities.csv` with entity-level results has the following columns:
-    * all `id` columns from the input table
-    * `type` type of the found entity, e.g. _person_, _organization_ or _tag_
-    * `text` disambiguated and standardized form of the entity, e.g. _John Smith_, _Keboola_, _safe carseat_
+    * all `id` columns from the input table (used as primary keys)
+    * `type` type of the found entity, e.g. _person_, _organization_ or _tag_, (primary key)
+    * `text` disambiguated and standardized form of the entity, e.g. _John Smith_, _Keboola_, _safe carseat_, (primary key)
     * `score` relevance score of the entity, e.g. _0.8_
 
   There are multiple rows per one document. All columns except `score` are part of the primary key.
@@ -52,5 +62,8 @@ The result contains three tables:
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject
     * `objectType` type of the relation's object
+    * `sentimentValue` detected sentiment of the relation, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the relation (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the relation as a label (_negative_, _neutral_ or _positive_)
 
   There are multiple rows per one document. All columns except `subjectType` and `objectType` are part of the primary key.

@@ -60,7 +60,7 @@ Mapped to `/data/config.json`
 
 ## Output format
 
-The results of the NLP analysis are written into three tables.
+The results of the NLP analysis are written into four tables.
 
 * `analysis-result-documents.csv` with document-level results, columns:
     * all `id` columns from the input table (used as primary keys)
@@ -70,10 +70,18 @@ The results of the NLP analysis are written into three tables.
     * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
     * `usedChars` the number of used characters by this document
 
+* `analysis-result-sentences.csv` with sentence-level results has the following columns:
+    * all `id` columns from the input table (used as primary keys)
+    * `index` zero-based index of the sentence in the document, (primary key)
+    * `text` the sentence text
+    * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)
+
 * `analysis-result-entities.csv` with entities-level results (multiple results per one document), columns:
     * all `id` columns from the input table (used as primary keys)
     * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
-    * `text` disambiguated and standardized form of the entity (primary key)
+    * `text` disambiguated and standardized form of the entity, (primary key)
     * `score` relevance score of the entity
 
 * `analysis-result-relations.csv` with relations-level results (multiple results per one document), columns:
@@ -84,3 +92,6 @@ The results of the NLP analysis are written into three tables.
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject
     * `objectType` type of the relation's object
+    * `sentimentValue` detected sentiment of the relation, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the relation (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the relation as a label (_negative_, _neutral_ or _positive_)
