@@ -41,10 +41,14 @@ class Params:
         self.analysis_types = self.get_analysis_types()
 
         params = config.get_parameters()
-        self.id_cols = params.get('columns', {}).get('id', [])
-        self.text_cols = params.get('columns', {}).get('text', [])
-        self.title_cols = params.get('columns', {}).get('title', [])
-        self.lead_cols = params.get('columns', {}).get('lead', [])
+        columns = params.get('columns', {})
+        if not isinstance(columns, dict):
+            columns = {}
+
+        self.id_cols = columns.get('id', [])
+        self.text_cols = columns.get('text', [])
+        self.title_cols = columns.get('title', [])
+        self.lead_cols = columns.get('lead', [])
         self.language = params.get('language')
         self.domain = params.get('domain')
         self.correction = params.get('correction')
@@ -246,6 +250,10 @@ class AnalysisApp:
             doc_res['sentimentValue'] = doc_analysis['sentiment']['value']
             doc_res['sentimentPolarity'] = doc_analysis['sentiment']['polarity']
             doc_res['sentimentLabel'] = doc_analysis['sentiment']['label']
+        else:
+            doc_res['sentimentValue'] = None
+            doc_res['sentimentPolarity'] = None
+            doc_res['sentimentLabel'] = None
         yield doc_res
 
     def analysis_to_snt_result(self, doc_analysis):
@@ -308,13 +316,14 @@ class AnalysisApp:
 
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
-        if not self.params.analysis_types or 'sentiment' in self.params.analysis_types:
-            fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         fields += ['usedChars']
         return fields
 
     def get_snt_tab_fields(self):
-        return self.params.id_cols + ['index', 'text', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields = self.params.id_cols + ['index', 'text']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        return fields
 
     def get_ent_tab_fields(self):
         return self.params.id_cols + ['type', 'text', 'score']
