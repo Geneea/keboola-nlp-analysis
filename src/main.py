@@ -17,7 +17,7 @@ def main():
         app.run()
 
         sys.exit(0)
-    except (ValueError, LookupError, IOError) as e:
+    except (ValueError, LookupError, AttributeError, IOError) as e:
         print('{type}: {e}'.format(type=type(e).__name__, e=e), file=sys.stderr)
         sys.stderr.flush()
         sys.exit(1)

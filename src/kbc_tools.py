@@ -93,13 +93,13 @@ def json_post(url, headers, data, session=None):
             try:
                 err = response.json()
                 print(
-                    'Error while communicating with the analysis API.',
+                    'Internal error while communicating with the analysis API.',
                     'HTTP error {code}, {e}: {msg}'.format(code=code, e=err['exception'], msg=err['message']),
                     sep='\n', file=sys.stderr
                 )
             except ValueError:
                 print(
-                    'Error while communicating with the analysis API.',
+                    'Internal error while communicating with the analysis API.',
                     'HTTP error {code}'.format(code=code),
                     '{body}'.format(body=response.text),
                     sep='\n', file=sys.stderr
@@ -108,7 +108,7 @@ def json_post(url, headers, data, session=None):
             return []
     except requests.RequestException as e:
         print(
-            'Error while communicating with the analysis API.',
+            'Internal error while communicating with the analysis API.',
             'HTTP request exception, {type}: {e}'.format(type=type(e).__name__, e=e),
             sep='\n', file=sys.stderr
         )

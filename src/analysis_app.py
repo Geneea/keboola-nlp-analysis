@@ -40,7 +40,7 @@ class Params:
         self.source_tab_path = self.get_source_tab_path()
         self.analysis_types = self.get_analysis_types()
 
-        params = config.get_parameters()
+        params = self.get_parameters()
         columns = params.get('columns', {})
         if not isinstance(columns, dict):
             columns = {}
@@ -63,10 +63,10 @@ class Params:
         self.validate()
 
     def get_user_key(self):
-        if 'user_key' in self.config.get_parameters():
-            return self.config.get_parameters()['user_key']
-        if 'image_parameters' in self.config.config_data and '#user_key' in self.config.config_data['image_parameters']:
-            return self.config.config_data['image_parameters']['#user_key']
+        if 'user_key' in self.get_parameters():
+            return self.get_parameters()['user_key']
+        if 'image_parameters' in self.get_config_data() and '#user_key' in self.get_config_data()['image_parameters']:
+            return self.get_config_data()['image_parameters']['#user_key']
         else:
             return None
 
@@ -75,14 +75,24 @@ class Params:
         return in_tabs[0]['full_path'] if len(in_tabs) == 1 else None
 
     def get_analysis_types(self):
-        types = self.config.get_parameters().get('analysis_types', [])
+        types = self.get_parameters().get('analysis_types', [])
         return set(t.strip().lower() for t in types if isinstance(t, str))
 
+    def get_config_data(self):
+        config_data = self.config.config_data
+        return config_data if config_data and isinstance(config_data, dict) else {}
+
+    def get_parameters(self):
+        params = self.config.get_parameters()
+        return params if params and isinstance(params, dict) else {}
+
     def get_advanced_params(self):
-        advanced_params = self.config.get_parameters().get('advanced', {})
+        advanced_params = self.get_parameters().get('advanced', {})
         return advanced_params if isinstance(advanced_params, dict) else {}
 
     def validate(self):
+        if not self.get_parameters():
+            raise ValueError('missing configuration parameters in "config.json"')
         if self.customer_id is None:
             raise ValueError('the "KBC_PROJECTID" environment variable needs to be set')
         if self.user_key is None:
