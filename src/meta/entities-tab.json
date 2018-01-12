@@ -3,6 +3,7 @@
   "columns_description": {
     "type": "type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)",
     "text": "disambiguated and standardized form of the entity, (primary key)",
-    "score": "relevance score of the entity, e.g. _0.8_"
+    "score": "relevance score of the entity, e.g. _0.8_",
+    "entityUid": "unique ID of the entity, may be empty"
   }
 }

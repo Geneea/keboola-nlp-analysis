@@ -83,6 +83,7 @@ The results of the NLP analysis are written into four tables.
     * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
     * `text` disambiguated and standardized form of the entity, (primary key)
     * `score` relevance score of the entity
+    * `entityUid` unique ID of the entity, may be empty
 
 * `analysis-result-relations.csv` with relations-level results (multiple results per one document), columns:
     * all `id` columns from the input table (used as primary keys)

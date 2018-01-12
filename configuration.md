@@ -49,6 +49,7 @@ The result contains four tables:
     * `type` type of the found entity, e.g. _person_, _organization_ or _tag_, (primary key)
     * `text` disambiguated and standardized form of the entity, e.g. _John Smith_, _Keboola_, _safe carseat_, (primary key)
     * `score` relevance score of the entity, e.g. _0.8_
+    * `entityUid` unique ID of the entity, may be empty
 
   There are multiple rows per one document. All columns except `score` are part of the primary key.
 
