@@ -108,7 +108,7 @@ class Params:
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
             if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score',
-                          'index', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
+                          'entityUid', 'index', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
@@ -293,7 +293,8 @@ class AnalysisApp:
                 ent_res = {
                     'type': ent['type'],
                     'text': ent['text'],
-                    'score': ent['score']
+                    'score': ent['score'],
+                    'entityUid': ent.get('uid')
                 }
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
@@ -336,7 +337,7 @@ class AnalysisApp:
         return fields
 
     def get_ent_tab_fields(self):
-        return self.params.id_cols + ['type', 'text', 'score']
+        return self.params.id_cols + ['type', 'text', 'score', 'entityUid']
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
