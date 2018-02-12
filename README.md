@@ -93,6 +93,8 @@ The results of the NLP analysis are written into four tables.
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject
     * `objectType` type of the relation's object
+    * `subjectUid` unique ID of the relation's subject
+    * `objectUid` unique ID of the relation's object
     * `sentimentValue` detected sentiment of the relation, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the relation (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the relation as a label (_negative_, _neutral_ or _positive_)
