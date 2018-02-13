@@ -107,8 +107,9 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'type', 'text', 'score',
-                          'entityUid', 'index', 'name', 'negated', 'subject', 'object', 'subjectType', 'objectType', 'usedChars'):
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'usedChars',
+                          'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
+                          'subjectType', 'objectType', 'subjectUid', 'objectUid'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
@@ -310,8 +311,10 @@ class AnalysisApp:
                     'negated': rel['negated'],
                     'subject': rel.get('subjectName'),
                     'subjectType': rel.get('subjectType'),
+                    'subjectUid': rel.get('subjectUid'),
                     'object': rel.get('objectName'),
-                    'objectType': rel.get('objectType')
+                    'objectType': rel.get('objectType'),
+                    'objectUid': rel.get('objectUid')
                 }
                 if 'sentiment' in rel:
                     rel_res['sentimentValue'] = rel['sentiment']['value']
@@ -341,7 +344,7 @@ class AnalysisApp:
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
-        fields += ['subject', 'object', 'subjectType', 'objectType']
+        fields += ['subject', 'object', 'subjectType', 'objectType', 'subjectUid', 'objectUid']
         fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
