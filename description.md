@@ -8,7 +8,9 @@ Feel free to try the system in our [live demo](https://demo.geneea.com) or brows
 
 ## Pricing
 
-You can evaluate our app by analyzing up to 10 MB of text. Please contact us if you need a higher trial limit. Click [here](https://www.geneea.com/pricing) to see our detailed pricing. The price is the same regardless of the number of features enabled (detecting sentiment only costs the same as detecting sentiment and extracting entities). You can use the app to analyze 1MB of text per month for free.
+You can evaluate our app by analyzing up to 10 MB of text. Please contact us if you need a higher trial limit. Note that the purpose of this evaluation is exactly what it says: evaluation, i.e. the results cannot be used for any commercial purposes.
+
+Click [here](https://www.geneea.com/pricing) to see our detailed pricing. The price is the same regardless of the number of features enabled (detecting sentiment only costs the same as detecting sentiment and extracting entities). You can use the app to analyze 1MB of text per month for free.
 
 ## Models and customizations
 
