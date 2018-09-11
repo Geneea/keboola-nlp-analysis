@@ -1,10 +1,14 @@
 # coding=utf-8
 # Python 3
 
+import base64
+import bz2
 import csv
 import itertools
 import json
+import pickle
 import sys
+
 from collections import deque
 
 import requests
@@ -134,3 +138,17 @@ def parallel_map(pool, fn, *iterables, **kwargs):
             for future in buffer:
                 future.cancel()
     return result_iterator()
+
+
+def serialize_data(obj, compress=True):
+    bin_data = pickle.dumps(obj)
+    if compress:
+        bin_data = bz2.compress(bin_data)
+    return base64.encodebytes(bin_data).decode('ascii')
+
+
+def deserialize_data(ser_value, decompress=True):
+    bin_data = base64.decodebytes(ser_value.encode('ascii'))
+    if decompress:
+        bin_data = bz2.decompress(bin_data)
+    return pickle.loads(bin_data)
