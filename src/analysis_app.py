@@ -109,7 +109,7 @@ class Params:
         for id_col in self.id_cols:
             if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'usedChars',
                           'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
-                          'subjectType', 'objectType', 'subjectUid', 'objectUid'):
+                          'subjectType', 'objectType', 'subjectUid', 'objectUid', 'segment'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
@@ -273,6 +273,7 @@ class AnalysisApp:
             for index, snt in enumerate(doc_analysis['sentences']):
                 snt_res = {
                     'index': index,
+                    'segment': snt['segment'],
                     'text': snt['text']
                 }
                 if 'sentiment' in snt:
@@ -297,6 +298,14 @@ class AnalysisApp:
                     'score': ent['score'],
                     'entityUid': ent.get('uid')
                 }
+                if 'sentiment' in ent:
+                    ent_res['sentimentValue'] = ent['sentiment']['value']
+                    ent_res['sentimentPolarity'] = ent['sentiment']['polarity']
+                    ent_res['sentimentLabel'] = ent['sentiment']['label']
+                else:
+                    ent_res['sentimentValue'] = None
+                    ent_res['sentimentPolarity'] = None
+                    ent_res['sentimentLabel'] = None
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
                 yield ent_res
@@ -335,12 +344,14 @@ class AnalysisApp:
         return fields
 
     def get_snt_tab_fields(self):
-        fields = self.params.id_cols + ['index', 'text']
+        fields = self.params.id_cols + ['index', 'segment', 'text']
         fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
     def get_ent_tab_fields(self):
-        return self.params.id_cols + ['type', 'text', 'score', 'entityUid']
+        fields = self.params.id_cols + ['type', 'text', 'score', 'entityUid']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        return fields
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
