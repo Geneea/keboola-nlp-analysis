@@ -390,7 +390,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols,
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(snt_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('sentences-tab.json')
@@ -398,7 +398,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['index'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('entities-tab.json')
@@ -406,7 +406,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['type', 'text'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(rel_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('relations-tab.json')
@@ -414,7 +414,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(full_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('full-tab.json')
@@ -422,7 +422,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols,
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
 
     def get_table_desc_meta(self, meta_filename):
