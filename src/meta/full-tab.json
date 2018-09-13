@@ -1,0 +1,6 @@
+{
+  "description": "table with full analysis results",
+  "columns_description": {
+    "binaryData": "serialized data with full analysis as Base64"
+  }
+}

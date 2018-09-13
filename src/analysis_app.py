@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from keboola import docker
 
-from kbc_tools import read_csv, csv_writer, slice_stream, make_batch_request, parallel_map
+from kbc_tools import read_csv, csv_writer, slice_stream, make_batch_request, parallel_map, serialize_data
 
 BASE_URL = 'https://api.geneea.com/keboola/v2/analysis'
 BETA_URL = 'https://beta-api.geneea.com/keboola/v2/analysis'
@@ -25,6 +25,7 @@ OUT_TAB_DOC = 'analysis-result-documents.csv'
 OUT_TAB_SNT = 'analysis-result-sentences.csv'
 OUT_TAB_ENT = 'analysis-result-entities.csv'
 OUT_TAB_REL = 'analysis-result-relations.csv'
+OUT_TAB_FULL = 'analysis-result-full.csv'
 
 META_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'meta')
 META_DESC_KEY = 'KBC.description'
@@ -59,6 +60,7 @@ class Params:
         self.doc_batch_size = int(advanced_params.get('doc_batch_size', DOC_BATCH_SIZE))
         self.thread_count = int(advanced_params.get('thread_count', THREAD_COUNT))
         self.reference_date = advanced_params.get('reference_date')
+        self.full_analysis_output = bool(int(advanced_params.get('full_analysis_output', 0)))
 
         self.validate()
 
@@ -109,7 +111,7 @@ class Params:
         for id_col in self.id_cols:
             if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'usedChars',
                           'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
-                          'subjectType', 'objectType', 'subjectUid', 'objectUid'):
+                          'subjectType', 'objectType', 'subjectUid', 'objectUid', 'segment', 'binaryData'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
             raise ValueError('the "thread_count" parameter can not be greater than 32')
@@ -157,21 +159,25 @@ class AnalysisApp:
         out_tab_snt_path = self.params.get_output_path(OUT_TAB_SNT)
         out_tab_ent_path = self.params.get_output_path(OUT_TAB_ENT)
         out_tab_rel_path = self.params.get_output_path(OUT_TAB_REL)
+        out_tab_full_path = self.params.get_output_path(OUT_TAB_FULL)
         with open(self.params.source_tab_path, 'r', encoding='utf-8') as in_tab, \
              open(out_tab_doc_path, 'w', encoding='utf-8') as out_tab_doc, \
              open(out_tab_snt_path, 'w', encoding='utf-8') as out_tab_snt, \
              open(out_tab_ent_path, 'w', encoding='utf-8') as out_tab_ent, \
-             open(out_tab_rel_path, 'w', encoding='utf-8') as out_tab_rel:
+             open(out_tab_rel_path, 'w', encoding='utf-8') as out_tab_rel, \
+             open(out_tab_full_path, 'w', encoding='utf-8') as out_tab_full:
             doc_writer = csv_writer(out_tab_doc, fields=self.get_doc_tab_fields())
             snt_writer = csv_writer(out_tab_snt, fields=self.get_snt_tab_fields())
             ent_writer = csv_writer(out_tab_ent, fields=self.get_ent_tab_fields())
             rel_writer = csv_writer(out_tab_rel, fields=self.get_rel_tab_fields())
+            full_writer = csv_writer(out_tab_full, fields=self.get_full_tab_fields())
 
             for doc_analysis in self.analyze(read_csv(in_tab)):
                 doc_writer.writerows(self.analysis_to_doc_result(doc_analysis))
                 snt_writer.writerows(self.analysis_to_snt_result(doc_analysis))
                 ent_writer.writerows(self.analysis_to_ent_result(doc_analysis))
                 rel_writer.writerows(self.analysis_to_rel_result(doc_analysis))
+                full_writer.writerows(self.analysis_to_full_result(doc_analysis))
 
                 doc_count += 1
                 used_chars += int(doc_analysis['usedChars'])
@@ -182,7 +188,8 @@ class AnalysisApp:
 
         self.write_usage(doc_count=doc_count, used_chars=used_chars)
         self.write_manifest(doc_tab_path=out_tab_doc_path, snt_tab_path=out_tab_snt_path,
-                            ent_tab_path=out_tab_ent_path, rel_tab_path=out_tab_rel_path)
+                            ent_tab_path=out_tab_ent_path, rel_tab_path=out_tab_rel_path,
+                            full_tab_path=out_tab_full_path)
 
         if self.params.analysis_types and not 'sentiment' in self.params.analysis_types:
             os.unlink(out_tab_snt_path)
@@ -193,6 +200,9 @@ class AnalysisApp:
         if self.params.analysis_types and not 'relations' in self.params.analysis_types:
             os.unlink(out_tab_rel_path)
             os.unlink(out_tab_rel_path + '.manifest')
+        if not self.params.full_analysis_output:
+            os.unlink(out_tab_full_path)
+            os.unlink(out_tab_full_path + '.manifest')
 
         print('the analysis has finished successfully, {n} documents with {ch} characters were analyzed'.format(n=doc_count, ch=used_chars))
         sys.stdout.flush()
@@ -229,6 +239,8 @@ class AnalysisApp:
             req['diacritization'] = self.params.diacritization
         if self.params.reference_date:
             req['referenceDate'] = self.params.reference_date
+        if self.params.full_analysis_output:
+            req['returnMentions'] = True
         return req
 
     def doc_batch_stream(self, row_stream):
@@ -273,6 +285,7 @@ class AnalysisApp:
             for index, snt in enumerate(doc_analysis['sentences']):
                 snt_res = {
                     'index': index,
+                    'segment': snt['segment'],
                     'text': snt['text']
                 }
                 if 'sentiment' in snt:
@@ -297,6 +310,14 @@ class AnalysisApp:
                     'score': ent['score'],
                     'entityUid': ent.get('uid')
                 }
+                if 'sentiment' in ent:
+                    ent_res['sentimentValue'] = ent['sentiment']['value']
+                    ent_res['sentimentPolarity'] = ent['sentiment']['polarity']
+                    ent_res['sentimentLabel'] = ent['sentiment']['label']
+                else:
+                    ent_res['sentimentValue'] = None
+                    ent_res['sentimentPolarity'] = None
+                    ent_res['sentimentLabel'] = None
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
                 yield ent_res
@@ -328,6 +349,15 @@ class AnalysisApp:
                     rel_res[id_col] = val
                 yield rel_res
 
+    def analysis_to_full_result(self, doc_analysis):
+        if self.params.full_analysis_output:
+            full_res = {
+                'binaryData': serialize_data(doc_analysis)
+            }
+            for id_col, val in zip(self.params.id_cols, json.loads(doc_analysis['id'])):
+                full_res[id_col] = val
+            yield full_res
+
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
         fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
@@ -335,12 +365,14 @@ class AnalysisApp:
         return fields
 
     def get_snt_tab_fields(self):
-        fields = self.params.id_cols + ['index', 'text']
+        fields = self.params.id_cols + ['index', 'segment', 'text']
         fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
     def get_ent_tab_fields(self):
-        return self.params.id_cols + ['type', 'text', 'score', 'entityUid']
+        fields = self.params.id_cols + ['type', 'text', 'score', 'entityUid']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        return fields
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
@@ -348,14 +380,17 @@ class AnalysisApp:
         fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
-    def write_manifest(self, *, doc_tab_path, snt_tab_path, ent_tab_path, rel_tab_path):
+    def get_full_tab_fields(self):
+        return self.params.id_cols + ['binaryData']
+
+    def write_manifest(self, *, doc_tab_path, snt_tab_path, ent_tab_path, rel_tab_path, full_tab_path):
         with open(doc_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('documents-tab.json')
             json.dump({
                 'primary_key': self.params.id_cols,
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(snt_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('sentences-tab.json')
@@ -363,7 +398,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['index'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(ent_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('entities-tab.json')
@@ -371,7 +406,7 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['type', 'text'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
         with open(rel_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
             tab_desc, cols_desc = self.get_table_desc_meta('relations-tab.json')
@@ -379,7 +414,15 @@ class AnalysisApp:
                 'primary_key': self.params.id_cols + ['type', 'name', 'negated', 'subject', 'object'],
                 'incremental': True,
                 'metadata': [tab_desc],
-                'column_metadata': {col_name: [decs] for col_name, decs in cols_desc.items()}
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
+            }, manifest_file, indent=4)
+        with open(full_tab_path + '.manifest', 'w', encoding='utf-8') as manifest_file:
+            tab_desc, cols_desc = self.get_table_desc_meta('full-tab.json')
+            json.dump({
+                'primary_key': self.params.id_cols,
+                'incremental': True,
+                'metadata': [tab_desc],
+                'column_metadata': {col_name: [desc] for col_name, desc in cols_desc.items()}
             }, manifest_file, indent=4)
 
     def get_table_desc_meta(self, meta_filename):
