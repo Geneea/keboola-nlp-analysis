@@ -73,6 +73,7 @@ The results of the NLP analysis are written into four tables.
 * `analysis-result-sentences.csv` with sentence-level results has the following columns:
     * all `id` columns from the input table (used as primary keys)
     * `index` zero-based index of the sentence in the document, (primary key)
+    * `segment` text segment where the sentence is located
     * `text` the sentence text
     * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
@@ -84,6 +85,9 @@ The results of the NLP analysis are written into four tables.
     * `text` disambiguated and standardized form of the entity, (primary key)
     * `score` relevance score of the entity
     * `entityUid` unique ID of the entity, may be empty
+    * `sentimentValue` detected sentiment of the entity, from an interval _\[-1.0; 1.0\]_
+    * `sentimentPolarity` detected sentiment of the entity (_-1_, _0_ or _1_)
+    * `sentimentLabel` sentiment of the entity as a label (_negative_, _neutral_ or _positive_)
 
 * `analysis-result-relations.csv` with relations-level results (multiple results per one document), columns:
     * all `id` columns from the input table (used as primary keys)
