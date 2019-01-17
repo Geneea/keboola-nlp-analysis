@@ -30,7 +30,7 @@ OUT_TAB_FULL = 'analysis-result-full.csv'
 META_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'meta')
 META_DESC_KEY = 'KBC.description'
 
-KBC_STACK_MAP = {
+KBC_STACK_ID_TO_NAME = {
     'connection.keboola.com': 'US',
     'connection.eu-central-1.keboola.com': 'EU',
     'connection.ap-southeast-2.keboola.com': 'AU'
@@ -76,7 +76,7 @@ class Params:
         if not stack_id:
             return project_id
         else:
-            env = KBC_STACK_MAP.get(stack_id, stack_id)
+            env = KBC_STACK_ID_TO_NAME.get(stack_id, stack_id)
             return '{env}-{proj}'.format(env=env, proj=project_id)
 
     def get_user_key(self):
