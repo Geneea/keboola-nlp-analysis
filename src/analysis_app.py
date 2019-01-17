@@ -30,12 +30,18 @@ OUT_TAB_FULL = 'analysis-result-full.csv'
 META_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'meta')
 META_DESC_KEY = 'KBC.description'
 
+KBC_STACK_ID_TO_NAME = {
+    'connection.keboola.com': 'US',
+    'connection.eu-central-1.keboola.com': 'EU',
+    'connection.ap-southeast-2.keboola.com': 'AU'
+}
+
 class Params:
 
     def __init__(self, config):
         self.config = config
 
-        self.customer_id = os.getenv('KBC_PROJECTID')
+        self.customer_id = self.get_customer_id()
 
         self.user_key = self.get_user_key()
         self.source_tab_path = self.get_source_tab_path()
@@ -63,6 +69,15 @@ class Params:
         self.full_analysis_output = bool(int(advanced_params.get('full_analysis_output', 0)))
 
         self.validate()
+
+    def get_customer_id(self):
+        stack_id = os.getenv('KBC_STACKID')
+        project_id = os.getenv('KBC_PROJECTID')
+        if not stack_id:
+            return project_id
+        else:
+            env = KBC_STACK_ID_TO_NAME.get(stack_id, stack_id)
+            return '{env}-{proj}'.format(env=env, proj=project_id)
 
     def get_user_key(self):
         if 'user_key' in self.get_parameters():
