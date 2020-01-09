@@ -1,6 +1,6 @@
-# VERSION 2.6.3
+# VERSION 2.6.4
 
-FROM quay.io/keboola/docker-custom-python:1.5.12
+FROM quay.io/keboola/docker-custom-python:1.5.4
 MAINTAINER Tomáš Mudruňka <mudrunka@geneea.com>
 
 # prepare the container
