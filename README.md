@@ -93,6 +93,7 @@ The results of the NLP analysis are written into four tables.
     * all `id` columns from the input table (used as primary keys)
     * `type` type of the found relation, _VERB_ or _ATTR_, (primary key)
     * `name` textual name of the relation, e.g. _buy_ or _smart_, (primary key)
+    * `negated` negation flag of the relation, _true_ or _false_
     * `subject` possible subject of the relation (primary key)
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject

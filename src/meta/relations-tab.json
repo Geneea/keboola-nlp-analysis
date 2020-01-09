@@ -3,6 +3,7 @@
   "columns_description": {
     "type": "type of the found relation, _VERB_ or _ATTR_, (primary key)",
     "name": "textual name of the relation, e.g. _buy_ or _smart_, (primary key)",
+    "negated": "negation flag of the relation, _true_ or _false_",
     "subject": "possible subject of the relation (primary key)",
     "object": "possible object of the relation (primary key)",
     "subjectType": "type of the relation's subject",
@@ -11,7 +12,6 @@
     "objectUid": "unique ID of the relation's object",
     "sentimentValue": "detected sentiment of the relation, from an interval _\\[-1.0; 1.0\\]_",
     "sentimentPolarity": "detected sentiment of the relation (_-1_, _0_ or _1_)",
-    "sentimentLabel": "sentiment of the relation as a label (_negative_, _neutral_ or _positive_)",
-    "sentimentDetailedLabel": "sentiment of the relation as detailed label"
+    "sentimentLabel": "sentiment of the relation as a label (_negative_, _neutral_ or _positive_)"
   }
 }

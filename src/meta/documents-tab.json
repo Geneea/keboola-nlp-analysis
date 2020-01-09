@@ -5,7 +5,6 @@
     "sentimentValue": "detected sentiment of the document, from an interval _\\[-1.0; 1.0\\]_",
     "sentimentPolarity": "detected sentiment of the document (_-1_, _0_ or _1_)",
     "sentimentLabel": "sentiment of the document as a label (_negative_, _neutral_ or _positive_)",
-    "sentimentDetailedLabel": "sentiment of the document as a detailed label",
     "usedChars": "the number of characters used by this document"
   }
 }

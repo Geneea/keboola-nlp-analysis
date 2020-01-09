@@ -124,8 +124,8 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel',
-                          'usedChars', 'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'usedChars',
+                          'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
                           'subjectType', 'objectType', 'subjectUid', 'objectUid', 'segment', 'binaryData'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
@@ -353,33 +353,31 @@ class AnalysisApp:
             res['sentimentValue'] = obj['sentiment']['value']
             res['sentimentPolarity'] = obj['sentiment']['polarity']
             res['sentimentLabel'] = label
-            res['sentimentDetailedLabel'] = obj['sentiment']['label']
         else:
             res['sentimentValue'] = None
             res['sentimentPolarity'] = None
             res['sentimentLabel'] = None
-            res['sentimentDetailedLabel'] = None
 
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         fields += ['usedChars']
         return fields
 
     def get_snt_tab_fields(self):
         fields = self.params.id_cols + ['index', 'segment', 'text']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
     def get_ent_tab_fields(self):
         fields = self.params.id_cols + ['type', 'text', 'score', 'entityUid']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
         fields += ['subject', 'object', 'subjectType', 'objectType', 'subjectUid', 'objectUid']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
         return fields
 
     def get_full_tab_fields(self):

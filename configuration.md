@@ -32,7 +32,6 @@ The result contains four tables:
     * `sentimentValue` detected sentiment of the document, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the document (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
-    * `sentimentDetailedLabel` sentiment of the document as a detailed label
     * `usedChars` the number of characters used by this document
 
 * `analysis-result-sentences.csv` with sentence-level results has the following columns:
@@ -43,7 +42,6 @@ The result contains four tables:
     * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)
-    * `sentimentDetailedLabel` sentiment of the sentence as a detailed label
 
   There are multiple rows per one document. All `id` columns plus the `index` column are part of the primary key.
 
@@ -56,9 +54,8 @@ The result contains four tables:
     * `sentimentValue` detected sentiment of the entity, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the entity (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the entity as a label (_negative_, _neutral_ or _positive_)
-    * `sentimentDetailedLabel` sentiment of the entity as a detailed label
 
-  There are multiple rows per one document. All columns except `score` are part of the primary key.
+  There are multiple rows per one document. All `id` columns plus `type` and `text` columns are part of the primary key.
 
   Note that the table also contains topic tags, marked as _tag_ in the `type` column.
 
@@ -66,6 +63,7 @@ The result contains four tables:
     * all `id` columns from the input table (used as primary keys)
     * `type` type of the found relation, _VERB_ or _ATTR_, (primary key)
     * `name` textual name of the relation, e.g. _buy_ or _smart_, (primary key)
+    * `negated` negation flag of the relation, _true_ or _false_
     * `subject` possible subject of the relation (primary key)
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject
@@ -75,6 +73,5 @@ The result contains four tables:
     * `sentimentValue` detected sentiment of the relation, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the relation (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the relation as a label (_negative_, _neutral_ or _positive_)
-    * `sentimentDetailedLabel` sentiment of the relation as a detailed label
 
-  There are multiple rows per one document. All columns except `subjectType` and `objectType` are part of the primary key.
+  There are multiple rows per one document. All `id` columns plus `type`, `name`, `negated`, `subject`, `object` columns are part of the primary key.
