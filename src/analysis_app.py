@@ -124,8 +124,8 @@ class Params:
             if not isinstance(cols, list):
                 raise ValueError('invalid "column" parameter, all values need to be an array of column names')
         for id_col in self.id_cols:
-            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'usedChars',
-                          'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
+            if id_col in ('language', 'sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel',
+                          'usedChars', 'index', 'text', 'type', 'score', 'entityUid', 'name', 'negated', 'subject', 'object',
                           'subjectType', 'objectType', 'subjectUid', 'objectUid', 'segment', 'binaryData'):
                 raise ValueError('invalid "column.id" parameter, value "{col}" is a reserved name'.format(col=id_col))
         if self.thread_count > 32:
@@ -284,14 +284,7 @@ class AnalysisApp:
         }
         for id_col, val in doc_ids_vals:
             doc_res[id_col] = val
-        if 'sentiment' in doc_analysis:
-            doc_res['sentimentValue'] = doc_analysis['sentiment']['value']
-            doc_res['sentimentPolarity'] = doc_analysis['sentiment']['polarity']
-            doc_res['sentimentLabel'] = doc_analysis['sentiment']['label']
-        else:
-            doc_res['sentimentValue'] = None
-            doc_res['sentimentPolarity'] = None
-            doc_res['sentimentLabel'] = None
+        self.set_sentiment_fields(doc_res, doc_analysis)
         yield doc_res
 
     def analysis_to_snt_result(self, doc_analysis):
@@ -303,14 +296,7 @@ class AnalysisApp:
                     'segment': snt['segment'],
                     'text': snt['text']
                 }
-                if 'sentiment' in snt:
-                    snt_res['sentimentValue'] = snt['sentiment']['value']
-                    snt_res['sentimentPolarity'] = snt['sentiment']['polarity']
-                    snt_res['sentimentLabel'] = snt['sentiment']['label']
-                else:
-                    snt_res['sentimentValue'] = None
-                    snt_res['sentimentPolarity'] = None
-                    snt_res['sentimentLabel'] = None
+                self.set_sentiment_fields(snt_res, snt)
                 for id_col, val in doc_ids_vals:
                     snt_res[id_col] = val
                 yield snt_res
@@ -325,14 +311,7 @@ class AnalysisApp:
                     'score': ent['score'],
                     'entityUid': ent.get('uid')
                 }
-                if 'sentiment' in ent:
-                    ent_res['sentimentValue'] = ent['sentiment']['value']
-                    ent_res['sentimentPolarity'] = ent['sentiment']['polarity']
-                    ent_res['sentimentLabel'] = ent['sentiment']['label']
-                else:
-                    ent_res['sentimentValue'] = None
-                    ent_res['sentimentPolarity'] = None
-                    ent_res['sentimentLabel'] = None
+                self.set_sentiment_fields(ent_res, ent)
                 for id_col, val in doc_ids_vals:
                     ent_res[id_col] = val
                 yield ent_res
@@ -352,14 +331,7 @@ class AnalysisApp:
                     'objectType': rel.get('objectType'),
                     'objectUid': rel.get('objectUid')
                 }
-                if 'sentiment' in rel:
-                    rel_res['sentimentValue'] = rel['sentiment']['value']
-                    rel_res['sentimentPolarity'] = rel['sentiment']['polarity']
-                    rel_res['sentimentLabel'] = rel['sentiment']['label']
-                else:
-                    rel_res['sentimentValue'] = None
-                    rel_res['sentimentPolarity'] = None
-                    rel_res['sentimentLabel'] = None
+                self.set_sentiment_fields(rel_res, rel)
                 for id_col, val in doc_ids_vals:
                     rel_res[id_col] = val
                 yield rel_res
@@ -373,26 +345,41 @@ class AnalysisApp:
                 full_res[id_col] = val
             yield full_res
 
+    def set_sentiment_fields(self, res, obj):
+        if 'sentiment' in obj:
+            if obj['sentiment']['polarity'] > 0: label = 'positive'
+            elif obj['sentiment']['polarity'] < 0: label = 'negative'
+            else: label = 'neutral'
+            res['sentimentValue'] = obj['sentiment']['value']
+            res['sentimentPolarity'] = obj['sentiment']['polarity']
+            res['sentimentLabel'] = label
+            res['sentimentDetailedLabel'] = obj['sentiment']['label']
+        else:
+            res['sentimentValue'] = None
+            res['sentimentPolarity'] = None
+            res['sentimentLabel'] = None
+            res['sentimentDetailedLabel'] = None
+
     def get_doc_tab_fields(self):
         fields = self.params.id_cols + ['language']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
         fields += ['usedChars']
         return fields
 
     def get_snt_tab_fields(self):
         fields = self.params.id_cols + ['index', 'segment', 'text']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
         return fields
 
     def get_ent_tab_fields(self):
         fields = self.params.id_cols + ['type', 'text', 'score', 'entityUid']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
         return fields
 
     def get_rel_tab_fields(self):
         fields = self.params.id_cols + ['type', 'name', 'negated']
         fields += ['subject', 'object', 'subjectType', 'objectType', 'subjectUid', 'objectUid']
-        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel']
+        fields += ['sentimentValue', 'sentimentPolarity', 'sentimentLabel', 'sentimentDetailedLabel']
         return fields
 
     def get_full_tab_fields(self):
