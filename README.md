@@ -62,13 +62,14 @@ Mapped to `/data/config.json`
 
 The results of the NLP analysis are written into four tables.
 
-* `analysis-result-documents.csv` with document-level results, columns:
+* `analysis-result-documents.csv` with document-level results in the following columns:
     * all `id` columns from the input table (used as primary keys)
     * `language` detected language of the document, as ISO 639-1 language code
     * `sentimentValue` detected sentiment of the document, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the document (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the document as a label (_negative_, _neutral_ or _positive_)
-    * `usedChars` the number of used characters by this document
+    * `sentimentDetailedLabel` sentiment of the document as a detailed label
+    * `usedChars` the number of characters used by this document
 
 * `analysis-result-sentences.csv` with sentence-level results has the following columns:
     * all `id` columns from the input table (used as primary keys)
@@ -78,22 +79,30 @@ The results of the NLP analysis are written into four tables.
     * `sentimentValue` detected sentiment of the sentence, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the sentence (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the sentence as a label (_negative_, _neutral_ or _positive_)
+    * `sentimentDetailedLabel` sentiment of the sentence as a detailed label
 
-* `analysis-result-entities.csv` with entities-level results (multiple results per one document), columns:
+  There are multiple rows per one document. All `id` columns plus the `index` column are part of the primary key.
+
+* `analysis-result-entities.csv` with entity-level results has the following columns:
     * all `id` columns from the input table (used as primary keys)
-    * `type` type of the found entity, e.g. _person_, _address_ or _tag_, (primary key)
-    * `text` disambiguated and standardized form of the entity, (primary key)
-    * `score` relevance score of the entity
+    * `type` type of the found entity, e.g. _person_, _organization_ or _tag_, (primary key)
+    * `text` disambiguated and standardized form of the entity, e.g. _John Smith_, _Keboola_, _safe carseat_, (primary key)
+    * `score` relevance score of the entity, e.g. _0.8_
     * `entityUid` unique ID of the entity, may be empty
     * `sentimentValue` detected sentiment of the entity, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the entity (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the entity as a label (_negative_, _neutral_ or _positive_)
+    * `sentimentDetailedLabel` sentiment of the entity as a detailed label
 
-* `analysis-result-relations.csv` with relations-level results (multiple results per one document), columns:
+  There are multiple rows per one document. All `id` columns plus `type` and `text` columns are part of the primary key.
+
+  Note that the table also contains topic tags, marked as _tag_ in the `type` column.
+
+* `analysis-result-relations.csv` with relation-level results has the following columns:
     * all `id` columns from the input table (used as primary keys)
     * `type` type of the found relation, _VERB_ or _ATTR_, (primary key)
     * `name` textual name of the relation, e.g. _buy_ or _smart_, (primary key)
-    * `negated` negation flag of the relation, _true_ or _false_
+    * `negated` negation flag of the relation, _true_ or _false_, (primary key)
     * `subject` possible subject of the relation (primary key)
     * `object` possible object of the relation (primary key)
     * `subjectType` type of the relation's subject
@@ -103,3 +112,6 @@ The results of the NLP analysis are written into four tables.
     * `sentimentValue` detected sentiment of the relation, from an interval _\[-1.0; 1.0\]_
     * `sentimentPolarity` detected sentiment of the relation (_-1_, _0_ or _1_)
     * `sentimentLabel` sentiment of the relation as a label (_negative_, _neutral_ or _positive_)
+    * `sentimentDetailedLabel` sentiment of the relation as a detailed label
+
+  There are multiple rows per one document. All `id` columns plus `type`, `name`, `negated`, `subject`, `object` columns are part of the primary key.

@@ -7,6 +7,7 @@
     "entityUid": "unique ID of the entity, may be empty",
     "sentimentValue": "detected sentiment of the entity, from an interval _\\[-1.0; 1.0\\]_",
     "sentimentPolarity": "detected sentiment of the entity (_-1_, _0_ or _1_)",
-    "sentimentLabel": "sentiment of the entity as a label (_negative_, _neutral_ or _positive_)"
+    "sentimentLabel": "sentiment of the entity as a label (_negative_, _neutral_ or _positive_)",
+    "sentimentDetailedLabel": "sentiment of the entity as a detailed label"
   }
 }
