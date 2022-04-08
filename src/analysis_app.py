@@ -64,7 +64,7 @@ class Params:
 
         advanced_params = self.get_advanced_params()
         self.doc_batch_size = int(advanced_params.get('doc_batch_size', DOC_BATCH_SIZE))
-        self.thread_count = int(advanced_params.get('thread_count', THREAD_COUNT))
+        self.thread_count = int(advanced_params.get('client_thread_count', THREAD_COUNT))
         self.reference_date = advanced_params.get('reference_date')
         self.full_analysis_output = bool(int(advanced_params.get('full_analysis_output', 0)))
 
